@@ -1,0 +1,30 @@
+;; -*- mode: emacs-lisp; coding: emacs-mule; -*-
+;; --------------------------------------------------------------------------
+;; Desktop File for Emacs
+;; --------------------------------------------------------------------------
+;; Created Mon Mar  9 14:44:39 2015
+;; Desktop file format version 206
+;; Emacs version 24.4.50.1
+
+;; Global section:
+(setq desktop-saved-frameset [frameset 1 (21757 45527 212833 0) (desktop . "206") "ysealy@TRP2737" nil nil ((((font-backend uniscribe gdi) (font . "-outline-Courier New-normal-normal-normal-mono-19-*-*-*-c-*-iso8859-1") (border-width . 2) (internal-border-width . 0) (right-divider-width . 0) (bottom-divider-width . 0) (vertical-scroll-bars) (foreground-color . "#839496") (background-color . "#002b36") (mouse-color . "black") (border-color . "#073642") (screen-gamma) (line-spacing) (left-fringe . 11) (right-fringe . 11) (alpha) (menu-bar-lines . 0) (tool-bar-lines . 2) (title) (fullscreen . maximized) (icon-type) (auto-raise) (auto-lower) (cursor-type . box) (scroll-bar-width . 0) (horizontal-scroll-bars . t) (display-type . color) (background-mode . dark) (cursor-color . "#d33682") (environment) (frameset--id . "C939-F08F-5841-6E20") (frameset--mini t . t) (height . 48) (width . 172) (modeline . t) (minibuffer . t) (unsplittable) (left + -8) (top + -8) (icon-name) (visibility . t) (display . "w32") (explicit-name) (tool-bar-position . top)) ((min-height . 4) (min-width . 20) (min-height-ignore . 3) (min-width-ignore . 8) (min-height-safe . 1) (min-width-safe . 4) (min-pixel-height . 84) (min-pixel-width . 220) (min-pixel-height-ignore . 63) (min-pixel-width-ignore . 88) (min-pixel-height-safe . 21) (min-pixel-width-safe . 44)) hc (pixel-width . 1920) (pixel-height . 955) (total-width . 175) (total-height . 45) (normal-height . 1.0) (normal-width . 1.0) (combination-limit) (leaf (pixel-width . 561) (pixel-height . 955) (total-width . 51) (total-height . 45) (normal-height . 1.0) (normal-width . 0.29218750000000004) (buffer "*dirtree*" (selected) (hscroll . 0) (fringes 11 11 nil) (margins 2) (scroll-bars 0 0 t nil) (vscroll . 0) (dedicated) (point . 374) (start . 326))) (leaf (last . t) (pixel-width . 1359) (pixel-height . 955) (total-width . 124) (total-height . 45) (normal-height . 1.0) (normal-width . 0.7078125) (buffer "travelrepublic" (selected . t) (hscroll . 0) (fringes 11 11 nil) (margins nil) (scroll-bars 0 0 t nil) (vscroll . 0) (dedicated) (point . 1) (start . 1)))))])
+(setq desktop-missing-file-warning nil)
+(setq tags-file-name nil)
+(setq tags-table-list nil)
+(setq search-ring nil)
+(setq regexp-search-ring nil)
+(setq register-alist nil)
+(setq file-name-history '("~/.emacs.d/" "c:/repos" "c:/emacs/bin/" "c:/repos/powell/Projects/TravelRepublicMobile2/Startup.cs" "~/.emacs.d/elpa/archives/melpa/archive-contents" "~/.emacs.d/elpa/archives/tromey/archive-contents" "~/.emacs.d/elpa/archives/marmalade/archive-contents" "c:/Users/ysealy/Projects/configs/.emacs.d/init.el" "c:/Users/ysealy/Projects/configs/.emacs.d/elpa/color-theme-sanityinc-solarized-2.25/color-theme-sanityinc-solarized-autoloads.el" "c:/Users/ysealy/Projects/configs/.emacs.d/elpa/csharp-mode-20150226.15/csharp-mode-autoloads.el"))
+
+;; Buffer section -- buffers listed in same order as in buffer list:
+(desktop-create-buffer 206
+  nil
+  "bin"
+  'dired-mode
+  '(projectile-mode linum-mode rainbow-delimiters-mode)
+  268
+  '(nil nil)
+  t
+  '("c:/emacs/bin/")
+  nil)
+
