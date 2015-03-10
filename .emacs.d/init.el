@@ -165,3 +165,6 @@
  ;; If there is more than one, they won't work right.
  )
 
+
+(global-set-key [C-mouse-4] 'text-scale-increase)
+(global-set-key [C-mouse-5] 'text-scale-decrease)
