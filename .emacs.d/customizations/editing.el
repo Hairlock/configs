@@ -70,3 +70,15 @@
     (quit nil)))
 
 (setq electric-indent-mode nil)
+
+
+(defun my/insert-line-before (times)
+  "Inserts a newline(s) above the line containing
+   the cursor."
+  (interactive)
+  (save-excursion
+    (move-beginning-of-line 1)
+    (newline times)))
+
+(global-set-key (kbd "C-S-o")
+                'my/insert-line-before)

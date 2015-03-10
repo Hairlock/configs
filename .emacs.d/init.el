@@ -156,7 +156,7 @@
  '(custom-enabled-themes (quote (sanityinc-solarized-dark)))
  '(custom-safe-themes
    (quote
-    ("4cf3221feff536e2b3385209e9b9dc4c2e0818a69a1cdb4b522756bcdf4e00a4" "4aee8551b53a43a883cb0b7f3255d6859d766b6c5e14bcb01bed572fcbef4328" "030bed79e98026124afd4ef8038ba7fe064314baf18b58759a5c92b91ec872fb" "23cf1bbd82721df1785aa1a10f742e555d6ea41921b65fab0345947bdd56c3f8" "f791ab63f888301f6eee69e3e262e1fa92fe705a1ef11bfdd49a2fac461bbe08" "b2231b396c332cf82d255f6a882687cb3c97ac36ee4b918713883a8f148af966" "e9f642ee0dbd5638e40390b8b8eded9743f1426ad1390e7b2e5d3fa04efa2969" default)))
+    ("ed5887d583126eb36d7108f72d595829603849689142284b3c4a22050ddd7df9" "4cf3221feff536e2b3385209e9b9dc4c2e0818a69a1cdb4b522756bcdf4e00a4" "4aee8551b53a43a883cb0b7f3255d6859d766b6c5e14bcb01bed572fcbef4328" "030bed79e98026124afd4ef8038ba7fe064314baf18b58759a5c92b91ec872fb" "23cf1bbd82721df1785aa1a10f742e555d6ea41921b65fab0345947bdd56c3f8" "f791ab63f888301f6eee69e3e262e1fa92fe705a1ef11bfdd49a2fac461bbe08" "b2231b396c332cf82d255f6a882687cb3c97ac36ee4b918713883a8f148af966" "e9f642ee0dbd5638e40390b8b8eded9743f1426ad1390e7b2e5d3fa04efa2969" default)))
  '(fci-rule-color "#2a2a2a"))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
@@ -168,3 +168,5 @@
 
 (global-set-key [C-mouse-4] 'text-scale-increase)
 (global-set-key [C-mouse-5] 'text-scale-decrease)
+
+(desktop-save-mode 1)
