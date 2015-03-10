@@ -3,9 +3,9 @@
 ;;; Code:
 (add-to-list 'load-path (or (file-name-directory #$) (car load-path)))
 
-;;;### (autoloads nil "js2-imenu-extras" "../../../../../.emacs.d/elpa/js2-mode-20150304.1821/js2-imenu-extras.el"
+;;;### (autoloads nil "js2-imenu-extras" "../../../../../AppData/Roaming/.emacs.d/elpa/js2-mode-20150304.1821/js2-imenu-extras.el"
 ;;;;;;  "a7580f86032a9ca1d6f6e543cf770ba7")
-;;; Generated autoloads from ../../../../../.emacs.d/elpa/js2-mode-20150304.1821/js2-imenu-extras.el
+;;; Generated autoloads from ../../../../../AppData/Roaming/.emacs.d/elpa/js2-mode-20150304.1821/js2-imenu-extras.el
 
 (autoload 'js2-imenu-extras-setup "js2-imenu-extras" "\
 
@@ -19,9 +19,9 @@ Toggle Imenu support for frameworks and structural patterns.
 
 ;;;***
 
-;;;### (autoloads nil "js2-mode" "../../../../../.emacs.d/elpa/js2-mode-20150304.1821/js2-mode.el"
+;;;### (autoloads nil "js2-mode" "../../../../../AppData/Roaming/.emacs.d/elpa/js2-mode-20150304.1821/js2-mode.el"
 ;;;;;;  "89328d34a9bc3215da40399cfe9250a2")
-;;; Generated autoloads from ../../../../../.emacs.d/elpa/js2-mode-20150304.1821/js2-mode.el
+;;; Generated autoloads from ../../../../../AppData/Roaming/.emacs.d/elpa/js2-mode-20150304.1821/js2-mode.el
 
 (autoload 'js2-minor-mode "js2-mode" "\
 Minor mode for running js2 as a background linter.
@@ -38,11 +38,11 @@ Major mode for editing JavaScript code.
 
 ;;;***
 
-;;;### (autoloads nil nil ("../../../../../.emacs.d/elpa/js2-mode-20150304.1821/js2-imenu-extras.el"
-;;;;;;  "../../../../../.emacs.d/elpa/js2-mode-20150304.1821/js2-mode-autoloads.el"
-;;;;;;  "../../../../../.emacs.d/elpa/js2-mode-20150304.1821/js2-mode-pkg.el"
-;;;;;;  "../../../../../.emacs.d/elpa/js2-mode-20150304.1821/js2-mode.el")
-;;;;;;  (21758 8433 386000 0))
+;;;### (autoloads nil nil ("../../../../../AppData/Roaming/.emacs.d/elpa/js2-mode-20150304.1821/js2-imenu-extras.el"
+;;;;;;  "../../../../../AppData/Roaming/.emacs.d/elpa/js2-mode-20150304.1821/js2-mode-autoloads.el"
+;;;;;;  "../../../../../AppData/Roaming/.emacs.d/elpa/js2-mode-20150304.1821/js2-mode-pkg.el"
+;;;;;;  "../../../../../AppData/Roaming/.emacs.d/elpa/js2-mode-20150304.1821/js2-mode.el")
+;;;;;;  (21758 44536 436521 100000))
 
 ;;;***
 
