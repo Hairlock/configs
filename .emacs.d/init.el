@@ -170,3 +170,4 @@
 (global-set-key [C-mouse-5] 'text-scale-decrease)
 
 (desktop-save-mode 1)
+(set-face-attribute 'default nil :height 100)
