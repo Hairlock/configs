@@ -66,7 +66,10 @@
     tagedit
 
     ;; git integration
-    magit))
+    magit
+	
+	;; node js
+	nodejs-repl))
 
 ;; On OS X, an Emacs instance started from the graphical user
 ;; interface will have a different environment than a shell in a
