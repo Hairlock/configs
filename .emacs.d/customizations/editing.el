@@ -82,3 +82,6 @@
 
 (global-set-key (kbd "C-S-o")
                 'my/insert-line-before)
+				
+(add-hook 'clojure-mode-hook '(lambda ()
+  (local-set-key (kbd "RET") 'newline-and-indent)))
