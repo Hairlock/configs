@@ -66,7 +66,10 @@
     tagedit
 
     ;; git integration
-    magit))
+    magit
+	
+	;; node js
+	nodejs-repl))
 
 ;; On OS X, an Emacs instance started from the graphical user
 ;; interface will have a different environment than a shell in a
@@ -170,3 +173,4 @@
 (global-set-key [C-mouse-5] 'text-scale-decrease)
 
 (desktop-save-mode 1)
+(set-face-attribute 'default nil :height 100)
