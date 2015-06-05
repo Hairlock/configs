@@ -1,0 +1,1 @@
+C-u M-x shell: prompt for a new shell

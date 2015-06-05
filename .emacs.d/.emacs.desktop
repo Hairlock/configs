@@ -2,29 +2,51 @@
 ;; --------------------------------------------------------------------------
 ;; Desktop File for Emacs
 ;; --------------------------------------------------------------------------
-;; Created Thu Mar 26 07:24:07 2015
+;; Created Tue Jun  2 17:19:44 2015
 ;; Desktop file format version 206
-;; Emacs version 24.4.1
+;; Emacs version 24.4.50.1
 
 ;; Global section:
-(setq desktop-saved-frameset [frameset 1 (21779 46103 229000 0) (desktop . "206") "Yannick@YANNICK-CLEVO" nil nil ((((font-backend uniscribe gdi) (font . "-outline-Courier New-normal-normal-normal-mono-23-*-*-*-c-*-iso8859-1") (border-width . 2) (internal-border-width . 0) (right-divider-width . 0) (bottom-divider-width . 0) (vertical-scroll-bars) (foreground-color . "#839496") (background-color . "#002b36") (mouse-color . "black") (border-color . "#073642") (screen-gamma) (line-spacing) (left-fringe . 14) (right-fringe . 14) (alpha) (menu-bar-lines . 0) (tool-bar-lines . 2) (title) (fullscreen) (icon-type) (auto-raise) (auto-lower) (cursor-type . box) (scroll-bar-width . 0) (horizontal-scroll-bars . t) (display-type . color) (background-mode . dark) (cursor-color . "#d33682") (environment) (frameset--id . "CC06-CAB6-C8D0-3810") (frameset--mini t . t) (height . 41) (width . 133) (modeline . t) (minibuffer . t) (unsplittable) (left . 0) (top . 0) (icon-name) (visibility . t) (display . "w32") (explicit-name) (tool-bar-position . top)) ((min-height . 4) (min-width . 10) (min-height-ignore . 3) (min-width-ignore . 4) (min-height-safe . 1) (min-width-safe . 2) (min-pixel-height . 100) (min-pixel-width . 140) (min-pixel-height-ignore . 75) (min-pixel-width-ignore . 56) (min-pixel-height-safe . 25) (min-pixel-width-safe . 28)) leaf (pixel-width . 1890) (pixel-height . 925) (total-width . 135) (total-height . 37) (normal-height . 1.0) (normal-width . 1.0) (buffer "chapter2.clj" (selected) (hscroll . 0) (fringes 14 14 nil) (margins 1) (scroll-bars 0 0 t nil) (vscroll . 0) (dedicated) (point . 27) (start . 1))))])
+(setq desktop-saved-frameset [frameset 1 (21869 55200 589653 600000) (desktop . "206") "ysealy@YSEALY" nil nil ((((font-backend uniscribe gdi) (font . "-outline-Courier New-normal-normal-normal-mono-13-*-*-*-c-*-iso8859-1") (border-width . 2) (internal-border-width . 0) (right-divider-width . 0) (bottom-divider-width . 0) (vertical-scroll-bars) (foreground-color . "#e1e1e0") (background-color . "#2d3743") (mouse-color . "black") (border-color . "#00346e") (screen-gamma) (line-spacing) (left-fringe . 8) (right-fringe . 8) (alpha) (menu-bar-lines . 0) (tool-bar-lines . 3) (title) (fullscreen . maximized) (icon-type) (auto-raise) (auto-lower) (cursor-type . box) (scroll-bar-width . 0) (horizontal-scroll-bars . t) (display-type . color) (background-mode . dark) (cursor-color . "#415160") (environment) (frameset--id . "B341-C127-962E-65E1") (frameset--mini t . t) (height . 63) (width . 238) (modeline . t) (minibuffer . t) (unsplittable) (left + -8) (top + -8) (icon-name) (visibility . t) (display . "w32") (explicit-name) (tool-bar-position . top)) ((min-height . 4) (min-width . 20) (min-height-ignore . 2) (min-width-ignore . 8) (min-height-safe . 1) (min-width-safe . 4) (min-pixel-height . 64) (min-pixel-width . 160) (min-pixel-height-ignore . 32) (min-pixel-width-ignore . 64) (min-pixel-height-safe . 16) (min-pixel-width-safe . 32)) hc (pixel-width . 1920) (pixel-height . 954) (total-width . 240) (total-height . 60) (normal-height . 1.0) (normal-width . 1.0) (combination-limit) (leaf (pixel-width . 960) (pixel-height . 954) (total-width . 120) (total-height . 60) (normal-height . 1.0) (normal-width . 0.5) (buffer "*Help*" (selected) (hscroll . 0) (fringes 8 8 nil) (margins 2) (scroll-bars 0 0 t nil) (vscroll . 0) (dedicated) (point . 1) (start . 1))) (leaf (last . t) (pixel-width . 960) (pixel-height . 954) (total-width . 120) (total-height . 60) (normal-height . 1.0) (normal-width . 0.5) (buffer "home.clj" (selected . t) (hscroll . 0) (fringes 8 8 nil) (margins 3) (scroll-bars 0 0 t nil) (vscroll . 0) (dedicated) (point . 4382) (start . 3278)))))])
 (setq desktop-missing-file-warning nil)
 (setq tags-file-name nil)
 (setq tags-table-list nil)
 (setq search-ring nil)
-(setq regexp-search-ring '("font"))
+(setq regexp-search-ring '("add-teas" "add-tea" "comment-regi" "commen" "add-easer" "create-tile" "create-tile-request" "save-til" "image" "perform-search" "saveby" "on-update" "a," "projectile" "font"))
 (setq register-alist nil)
-(setq file-name-history '("~/Projects/joyclojure/chapter2.clj" "~/Projects/joyclojure/chapter1.clj" "c:/Users/Yannick/.emacs.d/init.el" "~/.emacs.d/" "c:/Users/Yannick/.emacs.d/ido.last" "~/.emacs.d/" "~/Projects/configs/.emacs.d/ido.last" "~/Projects/configs/.emacs.d/customizations/editing.el" "~/Projects/configs/.emacs.d/init.el" "~/Projects/clojure-noob/src/clojure_noob/core.clj" "~/Projects/emacs-progs/core.el" "~/Projects/configs/.emacs.d/elpa/js2-mode-20150304.1821/js2-mode-autoloads.el" "~/Projects/euler/problems.clj" "~/.emacs.d/ido.last" "~/AppData/Roaming/.emacs.d/ido.last" "~/AppData/Roaming/.emacs.d/customizations/ui.el" "~/AppData/Roaming/.emacs.d/customizations/editing.el"))
+(setq file-name-history '("c:/Users/ysealy/Projects/configs/.emacs.d/init.el" "c:/Users/ysealy/Projects/goodparts/chapter2.js" "c:/Users/ysealy/Projects/goodparts/program.js" "c:/Users/ysealy/Projects/goodparts/program.html" "c:/Users/ysealy/Projects/coreasync.cljs" "c:/repos/resourcedashboard/src-cljs/resource_dashboard/utils.cljs" "c:/Users/ysealy/Projects/configs/.emacs.d/customizations/editing.el" "c:/repos/powell/Projects/TravelRepublicMobile2/client/js/src/desktop/trp/services/destinationContent.service.js" "c:/Users/ysealy/Projects/configs/.emacs.d/customizations/misc.el" "c:/Users/ysealy/Projects/configs/.emacs.d/init.el" "~/Projects/joyclojure/chapter2.clj" "~/Projects/joyclojure/chapter1.clj" "c:/Users/Yannick/.emacs.d/init.el" "~/.emacs.d/" "c:/Users/Yannick/.emacs.d/ido.last" "~/.emacs.d/" "~/Projects/configs/.emacs.d/ido.last" "~/Projects/configs/.emacs.d/customizations/editing.el" "~/Projects/configs/.emacs.d/init.el" "~/Projects/clojure-noob/src/clojure_noob/core.clj" "~/Projects/emacs-progs/core.el" "~/Projects/configs/.emacs.d/elpa/js2-mode-20150304.1821/js2-mode-autoloads.el" "~/Projects/euler/problems.clj" "~/.emacs.d/ido.last" "~/AppData/Roaming/.emacs.d/ido.last" "~/AppData/Roaming/.emacs.d/customizations/ui.el" "~/AppData/Roaming/.emacs.d/customizations/editing.el"))
 
 ;; Buffer section -- buffers listed in same order as in buffer list:
 (desktop-create-buffer 206
-  "c:/Users/Yannick/Projects/joyclojure/chapter2.clj"
-  "chapter2.clj"
+  "c:/repos/sites/cms/src/cms/routes/home.clj"
+  "home.clj"
   'clojure-mode
-  '(projectile-mode linum-mode rainbow-delimiters-mode eldoc-mode subword-mode paredit-mode cider-mode)
-  27
-  '(15 nil)
+  '(projectile-mode linum-mode rainbow-delimiters-mode yas-minor-mode subword-mode paredit-mode eldoc-mode cider-mode)
+  4382
+  '(3217 nil)
   nil
   nil
-  '((indent-tabs-mode) (buffer-file-coding-system . iso-latin-1-dos)))
+  '((indent-tabs-mode) (buffer-file-coding-system . undecided-dos)))
+
+(desktop-create-buffer 206
+  nil
+  "*info*"
+  'Info-mode
+  '(projectile-mode linum-mode rainbow-delimiters-mode yas-minor-mode)
+  227
+  '(nil nil)
+  t
+  '("dir" "Top" nil)
+  '((tab-width . 8) (case-fold-search . t)))
+
+(desktop-create-buffer 206
+  "c:/repos/sites/cms/src-cljs/cms/api.cljs"
+  "api.cljs"
+  'clojure-mode
+  '(projectile-mode linum-mode rainbow-delimiters-mode yas-minor-mode subword-mode paredit-mode eldoc-mode cider-mode)
+  2065
+  '(4590 nil)
+  nil
+  nil
+  '((indent-tabs-mode) (buffer-file-coding-system . undecided-dos)))
 
