@@ -2,28 +2,28 @@
 ;; --------------------------------------------------------------------------
 ;; Desktop File for Emacs
 ;; --------------------------------------------------------------------------
-;; Created Thu Mar 26 07:24:07 2015
+;; Created Tue Jun  9 23:05:00 2015
 ;; Desktop file format version 206
 ;; Emacs version 24.4.1
 
 ;; Global section:
-(setq desktop-saved-frameset [frameset 1 (21779 46103 229000 0) (desktop . "206") "Yannick@YANNICK-CLEVO" nil nil ((((font-backend uniscribe gdi) (font . "-outline-Courier New-normal-normal-normal-mono-23-*-*-*-c-*-iso8859-1") (border-width . 2) (internal-border-width . 0) (right-divider-width . 0) (bottom-divider-width . 0) (vertical-scroll-bars) (foreground-color . "#839496") (background-color . "#002b36") (mouse-color . "black") (border-color . "#073642") (screen-gamma) (line-spacing) (left-fringe . 14) (right-fringe . 14) (alpha) (menu-bar-lines . 0) (tool-bar-lines . 2) (title) (fullscreen) (icon-type) (auto-raise) (auto-lower) (cursor-type . box) (scroll-bar-width . 0) (horizontal-scroll-bars . t) (display-type . color) (background-mode . dark) (cursor-color . "#d33682") (environment) (frameset--id . "CC06-CAB6-C8D0-3810") (frameset--mini t . t) (height . 41) (width . 133) (modeline . t) (minibuffer . t) (unsplittable) (left . 0) (top . 0) (icon-name) (visibility . t) (display . "w32") (explicit-name) (tool-bar-position . top)) ((min-height . 4) (min-width . 10) (min-height-ignore . 3) (min-width-ignore . 4) (min-height-safe . 1) (min-width-safe . 2) (min-pixel-height . 100) (min-pixel-width . 140) (min-pixel-height-ignore . 75) (min-pixel-width-ignore . 56) (min-pixel-height-safe . 25) (min-pixel-width-safe . 28)) leaf (pixel-width . 1890) (pixel-height . 925) (total-width . 135) (total-height . 37) (normal-height . 1.0) (normal-width . 1.0) (buffer "chapter2.clj" (selected) (hscroll . 0) (fringes 14 14 nil) (margins 1) (scroll-bars 0 0 t nil) (vscroll . 0) (dedicated) (point . 27) (start . 1))))])
+(setq desktop-saved-frameset [frameset 1 (21879 25356 458000 0) (desktop . "206") "Yannick@YANNICK-CLEVO" nil nil ((((font-backend uniscribe gdi) (font . "-outline-Courier New-normal-normal-normal-mono-17-*-*-*-c-*-iso8859-1") (border-width . 2) (internal-border-width . 0) (right-divider-width . 0) (bottom-divider-width . 0) (vertical-scroll-bars) (foreground-color . "#839496") (background-color . "#002b36") (mouse-color . "black") (border-color . "#073642") (screen-gamma) (line-spacing) (left-fringe . 10) (right-fringe . 10) (alpha) (menu-bar-lines . 0) (tool-bar-lines . 2) (title) (fullscreen . maximized) (icon-type) (auto-raise) (auto-lower) (cursor-type . box) (scroll-bar-width . 0) (horizontal-scroll-bars . t) (display-type . color) (background-mode . dark) (cursor-color . "#d33682") (environment) (frameset--id . "0A31-DE6D-CBDA-4017") (frameset--mini t . t) (height . 52) (width . 190) (modeline . t) (minibuffer . t) (unsplittable) (left + -9) (top + -9) (icon-name) (visibility . t) (display . "w32") (explicit-name) (tool-bar-position . top)) ((min-height . 4) (min-width . 10) (min-height-ignore . 3) (min-width-ignore . 4) (min-height-safe . 1) (min-width-safe . 2) (min-pixel-height . 80) (min-pixel-width . 100) (min-pixel-height-ignore . 60) (min-pixel-width-ignore . 40) (min-pixel-height-safe . 20) (min-pixel-width-safe . 20)) leaf (pixel-width . 1920) (pixel-height . 991) (total-width . 192) (total-height . 49) (normal-height . 1.0) (normal-width . 1.0) (buffer "chapter7.clj" (selected . t) (hscroll . 0) (fringes 10 10 nil) (margins 3) (scroll-bars 0 0 t nil) (vscroll . 0) (dedicated) (point . 5502) (start . 4808))))])
 (setq desktop-missing-file-warning nil)
 (setq tags-file-name nil)
 (setq tags-table-list nil)
 (setq search-ring nil)
-(setq regexp-search-ring '("font"))
+(setq regexp-search-ring '("do-" "font"))
 (setq register-alist nil)
-(setq file-name-history '("~/Projects/joyclojure/chapter2.clj" "~/Projects/joyclojure/chapter1.clj" "c:/Users/Yannick/.emacs.d/init.el" "~/.emacs.d/" "c:/Users/Yannick/.emacs.d/ido.last" "~/.emacs.d/" "~/Projects/configs/.emacs.d/ido.last" "~/Projects/configs/.emacs.d/customizations/editing.el" "~/Projects/configs/.emacs.d/init.el" "~/Projects/clojure-noob/src/clojure_noob/core.clj" "~/Projects/emacs-progs/core.el" "~/Projects/configs/.emacs.d/elpa/js2-mode-20150304.1821/js2-mode-autoloads.el" "~/Projects/euler/problems.clj" "~/.emacs.d/ido.last" "~/AppData/Roaming/.emacs.d/ido.last" "~/AppData/Roaming/.emacs.d/customizations/ui.el" "~/AppData/Roaming/.emacs.d/customizations/editing.el"))
+(setq file-name-history '("c:/Users/Yannick/Projects/clojuretv/patterns.clj" "c:/Users/Yannick/Projects/clojuretv/scale.clj" "~/Projects/joyclojure/chapter6.clj" "~/Projects/joyclojure/chapter5.clj" "~/Projects/joyclojure/transducers.clj" "~/Projects/joyclojure/chapter4.clj" "~/Projects/joyclojure/chapter3.clj" "~/Projects/joyclojure/chapter2.clj" "~/Projects/joyclojure/chapter1.clj" "c:/Users/Yannick/.emacs.d/init.el" "~/.emacs.d/" "c:/Users/Yannick/.emacs.d/ido.last" "~/.emacs.d/" "~/Projects/configs/.emacs.d/ido.last" "~/Projects/configs/.emacs.d/customizations/editing.el" "~/Projects/configs/.emacs.d/init.el" "~/Projects/clojure-noob/src/clojure_noob/core.clj" "~/Projects/emacs-progs/core.el" "~/Projects/configs/.emacs.d/elpa/js2-mode-20150304.1821/js2-mode-autoloads.el" "~/Projects/euler/problems.clj" "~/.emacs.d/ido.last" "~/AppData/Roaming/.emacs.d/ido.last" "~/AppData/Roaming/.emacs.d/customizations/ui.el" "~/AppData/Roaming/.emacs.d/customizations/editing.el"))
 
 ;; Buffer section -- buffers listed in same order as in buffer list:
 (desktop-create-buffer 206
-  "c:/Users/Yannick/Projects/joyclojure/chapter2.clj"
-  "chapter2.clj"
+  "c:/Users/Yannick/Projects/joyclojure/chapter7.clj"
+  "chapter7.clj"
   'clojure-mode
   '(projectile-mode linum-mode rainbow-delimiters-mode eldoc-mode subword-mode paredit-mode cider-mode)
-  27
-  '(15 nil)
+  5502
+  '(nil nil)
   nil
   nil
   '((indent-tabs-mode) (buffer-file-coding-system . iso-latin-1-dos)))
