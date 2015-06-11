@@ -24,6 +24,7 @@
 (global-set-key (kbd "C-r") 'isearch-backward-regexp)
 (global-set-key (kbd "C-M-s") 'isearch-forward)
 (global-set-key (kbd "C-M-r") 'isearch-backward)
+(global-set-key "\C-c\C-d" "\C-a\C- \C-n\M-w\C-y")
 
 ;; Don't use hard tabs
 (setq-default indent-tabs-mode nil)
