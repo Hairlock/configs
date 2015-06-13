@@ -1,11 +1,15 @@
 ;;; color-theme-autoloads.el --- automatically extracted autoloads
 ;;
 ;;; Code:
-(add-to-list 'load-path (or (file-name-directory #$) (car load-path)))
+
 
-;;;### (autoloads nil "color-theme" "../../../../../AppData/Roaming/.emacs.d/elpa/color-theme-20080305.34/color-theme.el"
+;;;### (autoloads (color-theme-initialize color-theme-submit color-theme-install
+;;;;;;  color-theme-compare color-theme-make-snapshot color-theme-analyze-defun
+;;;;;;  color-theme-print color-theme-install-at-point-for-current-frame
+;;;;;;  color-theme-install-at-mouse color-theme-describe color-theme-select)
+;;;;;;  "color-theme" "../../../../../.emacs.d/elpa/color-theme-20080305.34/color-theme.el"
 ;;;;;;  "6bbdc8fa563db4ac5a83e7638a1625b2")
-;;; Generated autoloads from ../../../../../AppData/Roaming/.emacs.d/elpa/color-theme-20080305.34/color-theme.el
+;;; Generated autoloads from ../../../../../.emacs.d/elpa/color-theme-20080305.34/color-theme.el
 
 (autoload 'color-theme-select "color-theme" "\
 Displays a special buffer for selecting and installing a color theme.
@@ -139,16 +143,17 @@ Initialize the color theme package by loading color-theme-libraries.
 
 ;;;***
 
-;;;### (autoloads nil nil ("../../../../../AppData/Roaming/.emacs.d/elpa/color-theme-20080305.34/color-theme-autoloads.el"
-;;;;;;  "../../../../../AppData/Roaming/.emacs.d/elpa/color-theme-20080305.34/color-theme-pkg.el"
-;;;;;;  "../../../../../AppData/Roaming/.emacs.d/elpa/color-theme-20080305.34/color-theme.el")
-;;;;;;  (21873 22373 704805 400000))
+;;;### (autoloads nil nil ("../../../../../.emacs.d/elpa/color-theme-20080305.34/color-theme-pkg.el"
+;;;;;;  "../../../../../.emacs.d/elpa/color-theme-20080305.34/color-theme.el")
+;;;;;;  (21878 45666 479845 67000))
 
 ;;;***
 
+(provide 'color-theme-autoloads)
 ;; Local Variables:
 ;; version-control: never
 ;; no-byte-compile: t
 ;; no-update-autoloads: t
+;; coding: utf-8
 ;; End:
 ;;; color-theme-autoloads.el ends here
