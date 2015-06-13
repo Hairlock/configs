@@ -1,0 +1,6 @@
+sudo apt-get install default-jre
+sudo apt-get install default-jdk
+sudo update-alternatives --config java
+sudo nano /etc/environment
+JAVA_HOME="YOUR_PATH"
+source /etc/environment
