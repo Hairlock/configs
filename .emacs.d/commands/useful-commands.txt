@@ -1,2 +1,6 @@
 C-u M-x shell: prompt for a new shell
 
+M-{ - up paragraph
+M-{ - down paragraph
+M-H - mark paragraph
+M-g g - go to line
