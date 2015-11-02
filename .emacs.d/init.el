@@ -10,6 +10,9 @@
              '("tromey" . "http://tromey.com/elpa/") t)
 (add-to-list 'package-archives
              '("melpa" . "http://melpa.milkbox.net/packages/") t)
+			 
+;;(when (>= emacs-major-version 24)  
+;;  (add-to-list 'package-archives '("melpa" . "http://melpa.milkbox.net/packages/") t))
 
 ;; (setq package-archives '(("gnu" . "http://elpa.gnu.org/packages/")
 ;;                          ("marmalade" . "http://marmalade-repo.org/packages/")
@@ -237,5 +240,7 @@
    "(require 'clojure.tools.namespace.repl)
     (clojure.tools.namespace.repl/refresh)"))
 
-(define-key clojure-mode-map (kbd "M-r") 'cider-namespace-refresh)
+(define-key clojure-mode-map (kbd "C-c r") 'cider-namespace-refresh)
+
+(add-hook 'csharp-mode-hook 'omnisharp-mode)
 
