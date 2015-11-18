@@ -89,7 +89,6 @@
   (when (not (package-installed-p p))
     (package-install p)))
 
-
 ;; Place downloaded elisp files in ~/.emacs.d/vendor. You'll then be able
 ;; to load them.
 ;;
@@ -112,6 +111,11 @@
 ;; below, Emacs knows where to look for the corresponding file.
 (add-to-list 'load-path "~/.emacs.d/customizations")
 (add-to-list 'auto-mode-alist '("\\.js$" . js2-mode))
+
+
+(eval-when-compile
+  (require 'use-package))
+
 
 ;; Sets up exec-path-from-shell so that Emacs will use the correct
 ;; environment variables
@@ -149,7 +153,6 @@
            ;;   "~/.emacs.d/vendor/yasnippet")
 ;;(require 'yasnippet)
 ;;(yas-global-mode 1)
-
 
 
 ;;(nav-disable-overeager-window-splitting)
