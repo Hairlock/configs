@@ -1,0 +1,16 @@
+{
+	"bootstrapped": true,
+	"in_process_packages":
+	[
+	],
+	"installed_packages":
+	[
+		"Elm Language Support",
+		"Material Theme",
+		"Package Control",
+		"SideBarEnhancements",
+		"Theme - Soda",
+		"Theme - Soda SolarizedDark",
+		"TypeScript"
+	]
+}

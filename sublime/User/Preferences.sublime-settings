@@ -1,0 +1,11 @@
+{
+	"color_scheme": "Packages/Material Theme/schemes/Material-Theme-Darker.tmTheme",
+	"font_size": 11,
+	"ignored_packages":
+	[
+		"Vintage"
+	],
+	"soda_folder_icons": true,
+	"theme": "Material-Theme-Darker.sublime-theme",
+	"typescript_plugin_tsc_version": "1.7.3"
+}
