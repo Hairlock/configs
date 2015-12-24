@@ -5,6 +5,8 @@
 	],
 	"installed_packages":
 	[
+		"Babel",
+		"Compile Selected ES6",
 		"Elm Language Support",
 		"ES6-Toolkit",
 		"Material Theme",
