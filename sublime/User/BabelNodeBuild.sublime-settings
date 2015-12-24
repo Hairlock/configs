@@ -1,0 +1,4 @@
+{
+	"cmd": ["babel-node", "${file}"],
+	"selector":"source.js"
+}
