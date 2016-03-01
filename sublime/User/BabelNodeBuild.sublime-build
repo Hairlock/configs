@@ -1,5 +1,5 @@
 {
-	"cmd": ["C:\\Users\\ysealy\\AppData\\Roaming\\npm\\babel-node.cmd", "$file", "$file_base_name"],
+	"cmd": ["C:\\Users\\yannick\\AppData\\Roaming\\npm\\babel-node.cmd", "$file", "$file_base_name"],
 	"working_dir": "${project_path:${folder}}",
 	"selector":"*.js"
 }

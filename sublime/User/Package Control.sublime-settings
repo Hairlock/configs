@@ -6,9 +6,9 @@
 	"installed_packages":
 	[
 		"Babel",
-		"Compile Selected ES6",
 		"Elm Language Support",
 		"ES6-Toolkit",
+		"JavaScriptNext - ES6 Syntax",
 		"Material Theme",
 		"Package Control",
 		"SideBarEnhancements",
