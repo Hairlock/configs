@@ -6,11 +6,14 @@
 	"installed_packages":
 	[
 		"Babel",
-		"Compile Selected ES6",
 		"Elm Language Support",
 		"ES6-Toolkit",
+		"HTML5",
+		"Jade",
+		"JSX",
 		"Material Theme",
 		"Package Control",
+		"Razor",
 		"SideBarEnhancements",
 		"Theme - Soda",
 		"Theme - Soda SolarizedDark",
