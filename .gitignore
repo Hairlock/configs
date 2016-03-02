@@ -1,2 +1,7 @@
+/sublime/User/Package Control.cache/
+/sublime/User/Package Control.cache/*
 .emacs.d/.emacs.desktop
 .emacs.d/.emacs.desktop.lock
+.idea
+*.cache
+*.info
