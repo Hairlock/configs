@@ -6,3 +6,4 @@ import ${module_name}.Models exposing (..)
 
 type Action 
     = NoOp
+    | HopAction Hop.Action
