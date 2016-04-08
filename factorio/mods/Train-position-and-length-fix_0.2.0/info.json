@@ -1,0 +1,9 @@
+{
+ "name": "Train-position-and-length-fix",
+ "version": "0.2.0",
+ "title": "Train position and length fix",
+ "author": "Jackielope",
+ "contact": "http://www.factorioforums.com/forum/memberlist.php?mode=viewprofile&u=10590",
+ "homepage": "http://www.factorioforums.com/forum/memberlist.php?mode=viewprofile&u=10590",
+ "description": "This mod changes and standardizes the length of cargo wagons and diesel locomotives to be exactly equal to 8 tiles when horizontal or roughly 6.33 tiles when vertical.  It also slightly adjusts their collision and selection boxes and position on rails to have the wheels directly on the rails.  It does not change the fact that trains effectively get shorter when oriented vertically compared to horizontally."
+ }

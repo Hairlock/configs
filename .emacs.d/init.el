@@ -164,6 +164,8 @@
 ;;(yas-global-mode 1)
 
 
+
+
 ;;(nav-disable-overeager-window-splitting)
 ;; Optional: set up a quick key to toggle nav
 ;;(global-set-key [f8] 'nav-toggle)
@@ -229,10 +231,13 @@
  '(weechat-color-list
    (unspecified "#272822" "#49483E" "#A20C41" "#F92672" "#67930F" "#A6E22E" "#968B26" "#E6DB74" "#21889B" "#66D9EF" "#A41F99" "#FD5FF0" "#349B8D" "#A1EFE4" "#F8F8F2" "#F8F8F0")))
 
-
+(require 'neotree)
+(global-set-key [f8] 'neotree-toggle)
+   
 
 (global-set-key [C-mouse-4] 'text-scale-increase)
 (global-set-key [C-mouse-5] 'text-scale-decrease)
+(global-set-key (kbd "C-x C-g") 'goto-line)
 
 (require 'switch-window)
 (global-set-key (kbd "C-x o") 'switch-window)

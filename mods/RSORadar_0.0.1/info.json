@@ -1,0 +1,10 @@
+{
+  "name": "RSORadar",
+  "version": "0.0.1",
+  "title": "RSO Radar",
+  "author": "Kane Hart",
+  "contact": "stonelegion.com",
+  "homepage": "http://stonelegion.com",
+  "description": "Increases the Range of the Radar by 4x.",
+  "dependencies": ["base >= 0.12"]
+}

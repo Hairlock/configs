@@ -14,6 +14,8 @@
 	},
 	{ "keys": ["ctrl+b"], "command": "goto_definition" },
 	{ "keys": ["ctrl+shift+b"], "command": "build"},
-	{ "keys": ["ctrl+l"], "command": "show_at_center" }
+	{ "keys": ["ctrl+l"], "command": "show_at_center" },
+	{ "keys": ["ctrl+minus"], "command": "jump_back" },
+	{ "keys": ["ctrl+shift+minus"], "command": "jump_forward" },
 
 ]
