@@ -1,12 +1,29 @@
 {
-	"color_scheme": "Packages/Material Theme/schemes/Material-Theme-Darker.tmTheme",
+	"always_show_minimap_viewport": true,
+	"bold_folder_labels": true,
+	"color_scheme": "Packages/User/SublimeLinter/Monokai (SL).tmTheme",
+	"font_options":
+	[
+		"gray_antialias",
+		"subpixel_antialias"
+	],
 	"font_size": 12,
 	"ignored_packages":
 	[
 		"Monokai - Spacegray",
 		"Vintage"
 	],
+	"indent_guide_options":
+	[
+		"draw_normal",
+		"draw_active"
+	],
+	"line_padding_bottom": 3,
+	"line_padding_top": 3,
+	"overlay_scroll_bars": "enabled",
 	"soda_folder_icons": true,
-	"theme": "Material-Theme-Darker.sublime-theme",
+	"tab_size": 4,
+	"theme": "Default.sublime-theme",
+	"translate_tabs_to_sapces": true,
 	"typescript_plugin_tsc_version": "1.7.3"
 }

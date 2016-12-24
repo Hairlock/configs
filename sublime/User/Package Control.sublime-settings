@@ -5,7 +5,6 @@
 	],
 	"installed_packages":
 	[
-		"Babel",
 		"Elm Language Support",
 		"ES6-Toolkit",
 		"Gitignore",
@@ -15,11 +14,17 @@
 		"JavaScriptNext - ES6 Syntax",
 		"JSX",
 		"Material Theme",
+		"Moonscripty",
 		"Package Control",
 		"Pretty JSON",
 		"Razor",
 		"SideBarEnhancements",
+		"Sourcegraph",
 		"STProjectMaker",
+		"SublimeHaskell",
+		"SublimeLinter",
+		"SublimeLinter-contrib-eslint",
+		"SublimeREPL",
 		"Theme - Soda",
 		"Theme - Soda SolarizedDark",
 		"TypeScript"

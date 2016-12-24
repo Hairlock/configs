@@ -1,0 +1,70 @@
+{
+  "_args": [
+    [
+      {
+        "raw": "C:\\Users\\ysealy\\AppData\\Local\\Temp\\d-1161120-20780-d2ccfb\\package.tgz",
+        "scope": null,
+        "escapedName": null,
+        "name": null,
+        "rawSpec": "C:\\Users\\ysealy\\AppData\\Local\\Temp\\d-1161120-20780-d2ccfb\\package.tgz",
+        "spec": "C:\\Users\\ysealy\\AppData\\Local\\Temp\\d-1161120-20780-d2ccfb\\package.tgz",
+        "type": "local"
+      },
+      "C:\\Users\\ysealy\\AppData\\Local\\Temp\\apm-install-dir-1161120-20780-jg6dbk"
+    ]
+  ],
+  "_from": "..\\d-1161120-20780-d2ccfb\\package.tgz",
+  "_id": "html-to-elm@0.2.0",
+  "_inCache": true,
+  "_installable": true,
+  "_location": "/html-to-elm",
+  "_phantomChildren": {},
+  "_requested": {
+    "raw": "C:\\Users\\ysealy\\AppData\\Local\\Temp\\d-1161120-20780-d2ccfb\\package.tgz",
+    "scope": null,
+    "escapedName": null,
+    "name": null,
+    "rawSpec": "C:\\Users\\ysealy\\AppData\\Local\\Temp\\d-1161120-20780-d2ccfb\\package.tgz",
+    "spec": "C:\\Users\\ysealy\\AppData\\Local\\Temp\\d-1161120-20780-d2ccfb\\package.tgz",
+    "type": "local"
+  },
+  "_requiredBy": [
+    "#USER"
+  ],
+  "_resolved": "file:..\\d-1161120-20780-d2ccfb\\package.tgz",
+  "_shasum": "5381c2b12ed5a90288df06c0310598f45e1f3b59",
+  "_shrinkwrap": null,
+  "_spec": "C:\\Users\\ysealy\\AppData\\Local\\Temp\\d-1161120-20780-d2ccfb\\package.tgz",
+  "_where": "C:\\Users\\ysealy\\AppData\\Local\\Temp\\apm-install-dir-1161120-20780-jg6dbk",
+  "activationCommands": {
+    "atom-workspace": "html-to-elm:convert"
+  },
+  "bugs": {
+    "url": "https://github.com/CodeTownOfficial/html-to-elm/issues"
+  },
+  "dependencies": {
+    "htmlparser2": "^3.9.0"
+  },
+  "description": "Convert selected html to elm",
+  "devDependencies": {},
+  "engines": {
+    "atom": ">=1.0.0 <2.0.0"
+  },
+  "homepage": "https://github.com/CodeTownOfficial/html-to-elm#readme",
+  "keywords": [
+    "elm",
+    "html",
+    "convert"
+  ],
+  "license": "MIT",
+  "main": "./lib/html-to-elm",
+  "name": "html-to-elm",
+  "optionalDependencies": {},
+  "readme": "# html-to-elm package\n\nConvert the selected HTML text to Elm.\n\n## Example\n![A screenshot of your package](https://raw.githubusercontent.com/CodeTownOfficial/html-to-elm/master/img/demo.gif)\n\n## Usage\n\nSelect some HTML, [Open the Command Palette](https://github.com/atom/command-palette), and type `Html To Elm`.\n\nYou can also select the contextual menu > `Convert HTML to ELM` or the package menu\n\n### Custom Keyboard Shortcuts\n\nSee [Keymaps In-Depth](https://atom.io/docs/latest/behind-atom-keymaps-in-depth) for more details.\n\nFor example:\n\n```\n'atom-workspace':\n  'ctrl-alt-o': 'html-to-elm:convert'\n```\n",
+  "readmeFilename": "README.md",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/CodeTownOfficial/html-to-elm.git"
+  },
+  "version": "0.2.0"
+}

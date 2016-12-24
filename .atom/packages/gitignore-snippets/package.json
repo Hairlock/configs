@@ -1,0 +1,84 @@
+{
+  "_args": [
+    [
+      {
+        "raw": "C:\\Users\\ysealy\\AppData\\Local\\Temp\\d-1161120-8600-1hgk6la\\package.tgz",
+        "scope": null,
+        "escapedName": null,
+        "name": null,
+        "rawSpec": "C:\\Users\\ysealy\\AppData\\Local\\Temp\\d-1161120-8600-1hgk6la\\package.tgz",
+        "spec": "C:\\Users\\ysealy\\AppData\\Local\\Temp\\d-1161120-8600-1hgk6la\\package.tgz",
+        "type": "local"
+      },
+      "C:\\Users\\ysealy\\AppData\\Local\\Temp\\apm-install-dir-1161120-8600-15u3j7"
+    ]
+  ],
+  "_atomModuleCache": {
+    "version": 1,
+    "dependencies": [],
+    "extensions": {
+      ".coffee": [
+        "lib/gitignore-snippets-view.coffee",
+        "lib/gitignore-snippets.coffee"
+      ],
+      ".json": [
+        "package.json"
+      ]
+    },
+    "folders": []
+  },
+  "_from": "..\\d-1161120-8600-1hgk6la\\package.tgz",
+  "_id": "gitignore-snippets@0.2.5",
+  "_inCache": true,
+  "_installable": true,
+  "_location": "/gitignore-snippets",
+  "_phantomChildren": {},
+  "_requested": {
+    "raw": "C:\\Users\\ysealy\\AppData\\Local\\Temp\\d-1161120-8600-1hgk6la\\package.tgz",
+    "scope": null,
+    "escapedName": null,
+    "name": null,
+    "rawSpec": "C:\\Users\\ysealy\\AppData\\Local\\Temp\\d-1161120-8600-1hgk6la\\package.tgz",
+    "spec": "C:\\Users\\ysealy\\AppData\\Local\\Temp\\d-1161120-8600-1hgk6la\\package.tgz",
+    "type": "local"
+  },
+  "_requiredBy": [
+    "#USER"
+  ],
+  "_resolved": "file:..\\d-1161120-8600-1hgk6la\\package.tgz",
+  "_shasum": "f07f775bc862ec34e65a79b63362370ba7baaf8a",
+  "_shrinkwrap": null,
+  "_spec": "C:\\Users\\ysealy\\AppData\\Local\\Temp\\d-1161120-8600-1hgk6la\\package.tgz",
+  "_where": "C:\\Users\\ysealy\\AppData\\Local\\Temp\\apm-install-dir-1161120-8600-15u3j7",
+  "activationCommands": {
+    "atom-workspace": [
+      "gitignore-snippets:toggle"
+    ]
+  },
+  "bugs": {
+    "url": "https://github.com/jefkoslowski/gitignore-snippets/issues"
+  },
+  "dependencies": {
+    "atom-space-pen-views": "^2.0.3"
+  },
+  "description": "Quickly create .gitignore files with templates from GitHub.",
+  "devDependencies": {},
+  "dist": {
+    "shasum": "5a2be247e323d4f6e66d91c022813bba3196437b"
+  },
+  "engines": {
+    "atom": ">=0.174.0 <2.0.0"
+  },
+  "homepage": "https://github.com/jefkoslowski/gitignore-snippets",
+  "license": "MIT",
+  "main": "./lib/gitignore-snippets",
+  "name": "gitignore-snippets",
+  "optionalDependencies": {},
+  "readme": "# Gitignore Snippets\n\nQuickly create .gitignore files with templates from [GitHub](https://github.com/github/gitignore).\n\n![demo](https://dl.dropboxusercontent.com/u/268400/gitignore-snippets.gif)\n\n## Usage\n\nPrefix a template name (lowercase) with \"gig-\" and press tab. You can find all available templates on https://github.com/github/gitignore.\n\n```\ngig-[template-name]\n```\n\n## Examples\n\n### Node\n```\ngig-node\n```\n\n### Rails\n```\ngig-rails\n```\n",
+  "readmeFilename": "README.md",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jefkoslowski/gitignore-snippets.git"
+  },
+  "version": "0.2.5"
+}

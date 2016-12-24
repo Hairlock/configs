@@ -1,0 +1,91 @@
+{
+  "_args": [
+    [
+      {
+        "raw": "C:\\Users\\ysealy\\AppData\\Local\\Temp\\d-1161121-33340-1r4lj7m\\package.tgz",
+        "scope": null,
+        "escapedName": null,
+        "name": null,
+        "rawSpec": "C:\\Users\\ysealy\\AppData\\Local\\Temp\\d-1161121-33340-1r4lj7m\\package.tgz",
+        "spec": "C:\\Users\\ysealy\\AppData\\Local\\Temp\\d-1161121-33340-1r4lj7m\\package.tgz",
+        "type": "local"
+      },
+      "C:\\Users\\ysealy\\AppData\\Local\\Temp\\apm-install-dir-1161121-33340-1wf0hpj"
+    ]
+  ],
+  "_from": "..\\d-1161121-33340-1r4lj7m\\package.tgz",
+  "_id": "elmjutsu@2.12.1",
+  "_inCache": true,
+  "_installable": true,
+  "_location": "/elmjutsu",
+  "_phantomChildren": {},
+  "_requested": {
+    "raw": "C:\\Users\\ysealy\\AppData\\Local\\Temp\\d-1161121-33340-1r4lj7m\\package.tgz",
+    "scope": null,
+    "escapedName": null,
+    "name": null,
+    "rawSpec": "C:\\Users\\ysealy\\AppData\\Local\\Temp\\d-1161121-33340-1r4lj7m\\package.tgz",
+    "spec": "C:\\Users\\ysealy\\AppData\\Local\\Temp\\d-1161121-33340-1r4lj7m\\package.tgz",
+    "type": "local"
+  },
+  "_requiredBy": [
+    "#USER"
+  ],
+  "_resolved": "file:..\\d-1161121-33340-1r4lj7m\\package.tgz",
+  "_shasum": "60ad59f01e0ddbea57805906e1cda3f6f7772955",
+  "_shrinkwrap": null,
+  "_spec": "C:\\Users\\ysealy\\AppData\\Local\\Temp\\d-1161121-33340-1r4lj7m\\package.tgz",
+  "_where": "C:\\Users\\ysealy\\AppData\\Local\\Temp\\apm-install-dir-1161121-33340-1wf0hpj",
+  "activationCommands": {},
+  "bugs": {
+    "url": "https://github.com/halohalospecial/atom-elmjutsu/issues"
+  },
+  "consumedServices": {
+    "linter-elm-make.getWorkDirectory": {
+      "versions": {
+        "^1.0.0": "consumeGetWorkDirectory"
+      }
+    }
+  },
+  "dependencies": {
+    "atom-space-pen-views": "^0.20.0",
+    "chokidar": "1.5.2",
+    "fs-extra": "0.30.0",
+    "tmp": "0.0.28",
+    "underscore-plus": "1.6.6",
+    "untildify": "3.0.2"
+  },
+  "description": "A bag of tricks for developing with Elm. (Autocompletion, Go To Definition, Find Usages, Rename Symbol, etc.)",
+  "devDependencies": {},
+  "engines": {
+    "atom": ">=1.0.0 <2.0.0"
+  },
+  "homepage": "https://github.com/halohalospecial/atom-elmjutsu#readme",
+  "keywords": [
+    "elm",
+    "ide"
+  ],
+  "license": "MIT",
+  "main": "./lib/main",
+  "name": "elmjutsu",
+  "optionalDependencies": {},
+  "providedServices": {
+    "autocomplete.provider": {
+      "versions": {
+        "2.0.0": "provideAutocomplete"
+      }
+    },
+    "hyperclick.provider": {
+      "versions": {
+        "0.0.0": "provideHyperclick"
+      }
+    }
+  },
+  "readme": "# Elmjutsu\n\nA bag of tricks for developing with [Elm](http://elm-lang.org).\n\nhttps://atom.io/packages/elmjutsu\n\n## Feature Overview\n\n* [Autocomplete](#autocomplete)\n\n* [Go To Definition](#elmjutsu-go-to-definition)\n\n* [Go To Symbol](#elmjutsu-go-to-symbol)\n\n* [Find Usages](#elmjutsu-find-usages)\n\n* [Go To Next Usage](#elmjutsu-go-to-next-usage)\n\n* [Go To Previous Usage](#elmjutsu-go-to-previous-usage)\n\n* [Go Back](#elmjutsu-go-back)\n\n* [Rename Symbol](#elmjutsu-rename-symbol)\n\n* [Add Import](#elmjutsu-add-import)\n\n* [Toggle Sidekick](#elmjutsu-toggle-sidekick)\n  * Show type hints and documentation for the symbol at cursor position.\n\n* [Install Package](#elmjutsu-install-package)\n\n* [Uninstall Package](#elmjutsu-uninstall-package)\n\n## Requirements\n\n* [Elm](http://elm-lang.org/install)\n* [language-elm](https://atom.io/packages/language-elm)\n* For `Go To Definition`:\n  * [hyperclick](https://atom.io/packages/hyperclick) (optional)\n* For `Autocomplete`:\n  * [autocomplete-plus](https://atom.io/packages/autocomplete-plus) (installed by default)\n  * [snippets](https://atom.io/packages/snippets) (optional, installed by default)\n\n## Feature Details\n\n### Autocomplete\n\nAutocomplete is turned off by default.  To turn it on, check `Enable Autocomplete` in the package settings.\n\nThis provides suggestions for imports, project symbols, and 3rd-party package symbols.\n\n* It's recommended to uncheck `Enable autocomplete` of the [language-elm](https://atom.io/packages/language-elm) package to prevent duplicate suggestions.\n\n![autocomplete](https://github.com/halohalospecial/atom-elmjutsu/blob/master/images/autocomplete.gif?raw=true)\n\n* You can also check `Enable Autocomplete Snippets` if you prefer.\n\n![autocomplete-snippet](https://github.com/halohalospecial/atom-elmjutsu/blob/master/images/autocomplete-snippet.gif?raw=true)\n\n### `Elmjutsu: Go To Definition`\n\n![go-to-definition](https://github.com/halohalospecial/atom-elmjutsu/blob/master/images/go-to-definition.gif?raw=true)\n\nIf the [hyperclick](https://atom.io/packages/hyperclick) package is installed, you can also check `Enable Hyperclick` to jump to definition using `Ctrl` + click / `Cmd` + click (Mac).\n\n### `Elmjutsu: Go To Symbol`\n\n![go-to-symbol](https://github.com/halohalospecial/atom-elmjutsu/blob/master/images/go-to-symbol.gif?raw=true)\n\n### `Elmjutsu: Find Usages`\n\n![find-usages](https://github.com/halohalospecial/atom-elmjutsu/blob/master/images/find-usages.gif?raw=true)\n\n### `Elmjutsu: Go To Next Usage`\n\nMoves the cursor to the position of the next usage.\n\n### `Elmjutsu: Go To Previous Usage`\n\nMoves the cursor to the position of the previous usage.\n\n### `Elmjutsu: Go Back`\n\nThe current cursor position is added to a navigation stack before jumping via:\n  * `Go To Definition`\n  * `Go To Symbol`\n  * `Go To Next Usage`\n  * `Go To Previous Usage`\n\nInvoke this command to jump back to the previous position.\n\n### `Elmjutsu: Rename Symbol`\n\nRenames the symbol across the whole project.  Take note that this is *not* an undoable operation.\n\n* Press <kbd>enter</kbd> to rename or <kbd>escape</kbd> to cancel.\n* Uncheck usages to exclude.\n* Modified modules with open editors will *not* be saved automatically.\n* Renaming a module will *not* rename the associated file.\n\n![rename-symbol](https://github.com/halohalospecial/atom-elmjutsu/blob/master/images/rename-symbol.gif?raw=true)\n\n### `Elmjutsu: Hide Usages Panel`\n\nCloses the `Usages` panel (the panel is shown after invoking `Find Usages` or `Rename Symbol`).\n\n### `Elmjutsu: Add Import`\n\nQuickly adds an import without scrolling to the top of the file.  Also sorts the imports, removes duplicates, and removes [defaults](http://package.elm-lang.org/packages/elm-lang/core/latest/) automatically.\n\n![add-import](https://github.com/halohalospecial/atom-elmjutsu/blob/master/images/add-import.gif?raw=true)\n\n### `Elmjutsu: Toggle Sidekick`\nShows the type hints and documentation for the symbol at cursor position.  The size and position of the panel can be modified in the package settings.\n\n* Example #1 (default): `Sidekick Position` = \"bottom\", `Sidekick Size` = 0 (Automatically resizes to fit content.)\n\n![sidekick1](https://github.com/halohalospecial/atom-elmjutsu/blob/master/images/sidekick1.gif?raw=true)\n\n* Example #2: `Sidekick Position` = \"bottom\", `Sidekick Size` = 30 (Just shows the type hints.)\n\n![sidekick2](https://github.com/halohalospecial/atom-elmjutsu/blob/master/images/sidekick2.gif?raw=true)\n\n* Example #3: `Sidekick Position` = \"right\", `Sidekick Size` = 300\n\n![sidekick3](https://github.com/halohalospecial/atom-elmjutsu/blob/master/images/sidekick3.gif?raw=true)\n\n### `Elmjutsu: Install Package`\n\nQuickly installs a package.\n\n- This runs `elm-package install --yes <name> <version>` (or `elm-package install --yes <name>` if the selected version is \"Auto\").\n- Make sure that `Elm Package Path` is properly configured in the package settings.\n\n### `Elmjutsu: Uninstall Package`\n\nRemoves an installed package.\n\n- This removes the dependency from `elm-package.json`, then runs `elm-package install --yes` to clean up.\n\n## Keybindings\n\nHere is an example:\n```\n'atom-text-editor:not([mini])[data-grammar^=\"source elm\"]':\n  'f12': 'elmjutsu:go-to-definition'\n  'ctrl-r': 'elmjutsu:go-to-symbol'\n  'shift-f12': 'elmjutsu:find-usages'\n  'f8': 'elmjutsu:go-to-next-usage'\n  'shift-f8': 'elmjutsu:go-to-previous-usage'\n  'ctrl-f12': 'elmjutsu:go-back'\n  'f2': 'elmjutsu:rename-symbol'\n  'alt-insert': 'elmjutsu:add-import'\n\n'atom-workspace':\n  'f1': 'elmjutsu:toggle-sidekick'\n  'ctrl-shift-f12': 'elmjutsu:hide-usages-panel'\n```\n\nAdd them to your `keymap.cson` or bind them from `Settings` > `Keybindings`.\n\n## Notes\n\n* Be sure to check out the [settings](http://flight-manual.atom.io/using-atom/sections/atom-packages/#package-settings) for this package to find out about the available options.\n* It's highly recommended to read `CHANGELOG.md` before upgrading to a newer version to check for breaking changes.\n* The commands only work for top-level values for now.\n* You may encounter weird behaviors if multiple files are using the same module name in your project.\n* Major parts of this will be rewritten when a way to get the AST becomes available. Also, more features :)\n\n## Credits\n\n* The initial code was based on the [source](https://github.com/elm-lang/elm-lang.org) of [Try Elm](http://elm-lang.org/try).\n",
+  "readmeFilename": "README.md",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/halohalospecial/atom-elmjutsu.git"
+  },
+  "version": "2.12.1"
+}

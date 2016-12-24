@@ -1,0 +1,26 @@
+"*":
+  core:
+    telemetryConsent: "no"
+    themes: [
+      "one-dark-ui"
+      "solarized-dark-syntax"
+    ]
+  editor:
+    invisibles: {}
+    tabLength: 4
+  "elm-format":
+    binary: "C:\\Users\\ysealy\\Documents\\bin\\elm-format"
+  elmjutsu:
+    autocompleteSnippetsEnabled: true
+    cacheDirectory: "C:\\Users\\ysealy\\AppData\\Local\\Temp\\elmjutsu397848RGmxAPolxwj"
+  "exception-reporting":
+    userId: "7c4ae19a-2e5d-9807-49c3-2d9d9bc1bf7a"
+  "language-elm":
+    elmOraclePath: "C:\\Users\\ysealy\\AppData\\Roaming\\npm\\elm-oracle"
+  welcome:
+    showOnStartup: false
+  whitespace:
+    removeTrailingWhitespace: false
+".elm.source":
+  editor:
+    scrollPastEnd: true
