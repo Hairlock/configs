@@ -27,7 +27,7 @@ view address model =
         [ Html.text "Hello!" ]
 ]]></content>
 	<!-- Optional: Set a tabTrigger to define how to trigger the snippet -->
-	<tabTrigger>nsasm</tabTrigger>
+	<tabTrigger>snipsubmodule</tabTrigger>
 	<!-- Optional: Set a scope to limit where the snippet will trigger -->
 	<scope>source.elm</scope>
 	<description>Create a new StartApp Submodule</description>
