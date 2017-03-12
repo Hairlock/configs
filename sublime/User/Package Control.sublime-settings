@@ -6,6 +6,7 @@
 	"installed_packages":
 	[
 		"Elm Language Support",
+		"Elm Snippets",
 		"ES6-Toolkit",
 		"Gitignore",
 		"Highlight Build Errors",
@@ -21,7 +22,6 @@
 		"SideBarEnhancements",
 		"Sourcegraph",
 		"STProjectMaker",
-		"SublimeHaskell",
 		"SublimeLinter",
 		"SublimeLinter-contrib-eslint",
 		"SublimeREPL",

@@ -28,18 +28,43 @@
   'alt-F1': 'tree-view:reveal-active-file'
   'ctrl-shift-n': 'fuzzy-finder:toggle-file-finder'
   
+'.platform-win32':
+  'ctrl-shift-n': 'fuzzy-finder:toggle-file-finder'
+  'alt-F1': 'tree-view:reveal-active-file'
+  'ctrl-alt-l': 'tree-view:reveal-active-file'
+  'alt-down': 'goto-definition:go'
+  
+  
+  
+'atom-text-editor.autocomplete-active':
+  'ctrl-shift-space': 'autocomplete-plus:activate'
+  
 'atom-text-editor:not([mini])[data-grammar^="source elm"]':
-  'ctrl-alt-shift-b': 'elmjutsu:go-to-definition'
-  'ctrl-b': 'elmjutsu:go-to-symbol'
-  'alt-f7': 'elmjutsu:find-usages'
-  'f8': 'elmjutsu:go-to-next-usage'
-  'shift-f8': 'elmjutsu:go-to-previous-usage'
-  'ctrl-f12': 'elmjutsu:go-back'
-  'f2': 'elmjutsu:rename-symbol'
-  'alt-insert': 'elmjutsu:add-import'  
+   'ctrl-b': 'elmjutsu:go-to-definition'
+   'ctrl-t': 'elmjutsu:go-to-symbol'
+   'alt-f7': 'elmjutsu:find-usages'
+   'f8': 'elmjutsu:go-to-next-usage'
+   'shift-f8': 'elmjutsu:go-to-previous-usage'
+   # 'ctrl-_': 'elmjutsu:go-back'
+   'f2': 'elmjutsu:rename-symbol'
+   'alt-insert': 'elmjutsu:add-import' 
+  
+'atom-text-editor:not([mini])[data-grammar^="source elixir"]':
+  "alt-,": 'autocomplete-elixir:backward'
+  "ctrl-alt-shift-b": 'autocomplete-elixir:jump-to-definition'  
+  
+#'atom-text-editor[data-grammer^="source Elixir"]':
+#    'alt-.': 'autocomplete-elixir:backward'
+#    'ctrl-alt-b': 'autocomplete-elixir:jump-to-definition'
+    
+  
+ 
 
 'emacs-center-line':
   'ctrl-alt-l':	'emacs-center-screen:center-screen'
+  
+  
+  
   
  
  

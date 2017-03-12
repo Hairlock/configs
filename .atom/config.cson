@@ -1,5 +1,13 @@
 "*":
+  "autocomplete-elixir":
+    elixirPath: "C:\\Program Files (x86)\\Elixir\\bin"
+    erlangHome: "C:\\Program Files\\erl8.0\\bin"
+  "autocomplete-plus": {}
   core:
+    packagesWithKeymapsDisabled: [
+      "autocomplete-elixir"
+      "language-elm"
+    ]
     telemetryConsent: "no"
     themes: [
       "one-dark-ui"
@@ -7,6 +15,7 @@
     ]
   editor:
     invisibles: {}
+    scrollPastEnd: true
     tabLength: 4
   "elm-format":
     binary: "C:\\Users\\ysealy\\Documents\\bin\\elm-format"
@@ -17,6 +26,9 @@
     userId: "7c4ae19a-2e5d-9807-49c3-2d9d9bc1bf7a"
   "language-elm":
     elmOraclePath: "C:\\Users\\ysealy\\AppData\\Roaming\\npm\\elm-oracle"
+  "platformio-ide-terminal":
+    core:
+      shell: "C:\\Windows\\System32\\cmd.exe"
   welcome:
     showOnStartup: false
   whitespace:
