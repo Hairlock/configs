@@ -5,8 +5,9 @@
   "autocomplete-plus": {}
   core:
     packagesWithKeymapsDisabled: [
-      "autocomplete-elixir"
       "language-elm"
+      "atom-elixir"
+      "autocomplete-elixir"
     ]
     telemetryConsent: "no"
     themes: [
@@ -26,6 +27,9 @@
     userId: "7c4ae19a-2e5d-9807-49c3-2d9d9bc1bf7a"
   "language-elm":
     elmOraclePath: "C:\\Users\\ysealy\\AppData\\Roaming\\npm\\elm-oracle"
+  "linter-ui-default":
+    panelHeight: 0
+    showPanel: true
   "platformio-ide-terminal":
     core:
       shell: "C:\\Windows\\System32\\cmd.exe"

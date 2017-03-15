@@ -6,3 +6,8 @@
 .idea
 *.cache
 *.info
+.node-gyp
+.apm
+storage
+compile-cache
+blob-store

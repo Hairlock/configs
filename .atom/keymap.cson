@@ -50,8 +50,12 @@
    'alt-insert': 'elmjutsu:add-import' 
   
 'atom-text-editor:not([mini])[data-grammar^="source elixir"]':
-  "alt-,": 'autocomplete-elixir:backward'
-  "ctrl-alt-shift-b": 'autocomplete-elixir:jump-to-definition'  
+  # "alt-,": 'autocomplete-elixir:backward'
+  # "ctrl-alt-shift-b": 'autocomplete-elixir:jump-to-definition'  
+  "alt-down": 'atom-elixir:goto-definition'  
+  "alt-up": 'atom-elixir:return-from-definition'  
+  
+  
   
 #'atom-text-editor[data-grammer^="source Elixir"]':
 #    'alt-.': 'autocomplete-elixir:backward'

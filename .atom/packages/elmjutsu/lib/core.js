@@ -1,11 +1,11 @@
 'use babel';
 
-const CompositeDisposable = require('atom').CompositeDisposable;
+import {CompositeDisposable} from 'atom';
 import path from 'path';
 import fs from 'fs-extra';
-const _ = require('underscore-plus');
-const chokidar = require('chokidar');
-const tmp = require('tmp');
+import _ from 'underscore-plus';
+import chokidar from 'chokidar';
+import tmp from 'tmp';
 import helper from './helper';
 import indexing from './indexing';
 import Elm from '../elm/indexer';
@@ -14,9 +14,9 @@ export default class Core {
 
   constructor() {
     this.subscriptions = new CompositeDisposable();
-    this.jumpPoints = {};
     this.watchers = {};
     this.indexer = Elm.Indexer.worker();
+    this.indexer.ports.configChangedSub.send(getConfig());
     this.indexer.ports.docsDownloadedCmd.subscribe((dependenciesAndJson) => {
       const editor = atom.workspace.getActiveTextEditor();
       if (helper.isElmEditor(editor)) {
@@ -32,11 +32,11 @@ export default class Core {
       }
       dependenciesAndJson.forEach(([[packageName, version], jsonString]) => {
         const docsFilePath = getDocsFilePath(cacheDirectory, packageName, version);
+        // No need to use the `-Sync` functions here.
         fs.ensureFile(docsFilePath, function (err) {
           if (err) {
             return helper.log('Failed to write ' + docsFilePath + '(' + err + ')', 'red');
           }
-          // No need to use the `writeFileSync` here.
           fs.writeFile(docsFilePath, jsonString, (err) => {
             if (err) {
               return helper.log('Failed to write ' + docsFilePath + '(' + err + ')', 'red');
@@ -67,54 +67,57 @@ export default class Core {
       });
       this.indexer.ports.docsReadSub.send(readDependencyJsonStrings);
       if (unreadDependencies.length > 0) {
+        const unreadDependenciesString = unreadDependencies.map(([packageName, version]) => {
+          return packageName + '/' + version;
+        }).join(', ');
+        helper.log('Downloading missing package docs (' + unreadDependenciesString + ')...');
         this.indexer.ports.downloadMissingPackageDocsSub.send(unreadDependencies);
       }
     });
-    this.indexer.ports.goToDefinitionCmd.subscribe(([activeFile, symbol]) => {
-      let filePath;
-      const prefix = helper.getPackageDocsPrefix();
-      if (activeFile && symbol.sourcePath.startsWith(prefix)) {
-        const parts = symbol.sourcePath.replace(prefix, '').replace(/#.*$/, '').split('/');
-        if (parts.length === 4) {
-          const [namespace, packageName, version, moduleName] = parts;
-          filePath = path.join(activeFile.projectDirectory, 'elm-stuff', 'packages', namespace, packageName, version, 'src', moduleName.replace('-', path.sep)) + '.elm';
-        }
-      } else {
-        filePath = symbol.sourcePath;
-      }
-      if (!fs.existsSync(filePath)) {
-        atom.notifications.addError('Error opening file `' + filePath + '`', {dismissable: true});
-        return;
-      }
-      atom.workspace.open(filePath, {searchAllPanes: true, split: 'left'})
-        .then((editor) => {
-          helper.scanForSymbolDefinitionRange(editor, symbol, (range) => {
-            editor.setCursorBufferPosition(range.start);
-            editor.scrollToCursorPosition({center: true});
-          });
-        });
-    });
+    this.autocompleteActive = {};
     this.sendTokenDebouncer = null;
     // Not using `atom.workspace.observeTextEditors` here to also observe the text editor created for `Pipe Selections`.
     this.subscriptions.add(atom.textEditors.observe((editor) => {
       if (helper.isElmEditor(editor)) {
         this.watchProject(this.indexer, editor);
-        this.subscriptions.add(editor.onDidChangeCursorPosition((e) => {
+        let editorSubscriptions = new CompositeDisposable();
+        editorSubscriptions.add(editor.onDidChangeCursorPosition(({cursor}) => {
+          if (cursor !== editor.getLastCursor()) {
+            return;
+          }
           if (this.sendTokenDebouncer) {
             clearTimeout(this.sendTokenDebouncer);
           }
           this.sendTokenDebouncer =
             setTimeout(() => {
-              indexing.sendActiveToken(this.indexer, editor);
-            }, 150);
+              if (!this.autocompleteActive[editor.id]) {
+                // Only send active token or inference if nothing is selected.
+                let selectedRange = editor.getSelectedBufferRange();
+                if (selectedRange.isEmpty()) {
+                  const inference = this.inferTypes.getInferenceAtPosition(editor);
+                  if (inference) {
+                    indexing.sendEnteredInference(this.indexer, inference);
+                  } else {
+                    indexing.sendActiveToken(this.indexer, editor);
+                  }
+                }
+              }
+            }, 300);
         }));
-        this.subscriptions.add(editor.onDidStopChanging(() => {
-          indexing.sendActiveTextAndToken(this.indexer, editor);
+        editorSubscriptions.add(editor.onDidStopChanging(() => {
+          if (editor.isPipeSelectionsEditor) {
+            indexing.sendActiveToken(this.indexer, editor);
+          } else if (!this.autocompleteActive[editor.id]) {
+            indexing.sendActiveTextAndToken(this.indexer, editor);
+            indexing.sendClearHintsCache(this.indexer);
+          }
         }));
-        this.subscriptions.add(editor.onDidDestroy(() => {
+        editorSubscriptions.add(editor.onDidDestroy(() => {
+          editorSubscriptions.dispose();
           // Revert to the text saved in file.
           indexing.sendFileContentsChanged(this.indexer, editor.getPath());
         }));
+        this.subscriptions.add(editorSubscriptions);
       }
     }));
     this.subscriptions.add(atom.workspace.observeActivePaneItem((item) => {
@@ -130,9 +133,26 @@ export default class Core {
         indexing.sendActiveFile(this.indexer, editor);
       }
     }, 0);
+    [
+      'elmjutsu.showAliasesOfTypesInSidekick',
+      'elmjutsu.showAliasesOfTypesInTooltip',
+    ].forEach((configKey) => {
+        this.subscriptions.add(atom.config.observe(configKey, () => {
+          this.indexer.ports.configChangedSub.send(getConfig());
+        }));
+      });
+  }
+
+  setInferTypes(inferTypes) {
+    this.inferTypes = inferTypes;
+  }
+
+  setAutocompleteActive(editor, isActive) {
+    this.autocompleteActive[editor.id] = isActive;
   }
 
   destroy() {
+    this.autocompleteActive = null;
     if (this.sendTokenDebouncer) {
       clearTimeout(this.sendTokenDebouncer);
       this.sendTokenDebouncer = null;
@@ -147,42 +167,6 @@ export default class Core {
 
   getIndexer() {
     return this.indexer;
-  }
-
-  goToDefinitionCommand() {
-    const editor = atom.workspace.getActiveTextEditor();
-    if (helper.isElmEditor(editor)) {
-      this.storeJumpPoint();
-      this.indexer.ports.goToDefinitionSub.send(helper.getToken(editor));
-    }
-  }
-
-  goBackCommand() {
-    const editor = atom.workspace.getActiveTextEditor();
-    const projectDirectory = helper.getProjectDirectory(editor.getPath());
-    var jumpPoints = this.jumpPoints[projectDirectory] ? this.jumpPoints[projectDirectory] : null;
-    if (jumpPoints) {
-      const jumpPoint = jumpPoints.pop();
-      this.jumpPoints[projectDirectory] = jumpPoints;
-      if (jumpPoint) {
-        atom.workspace.open(jumpPoint.uri, {searchAllPanes: true, split: 'left'})
-          .then((editor) => {
-            editor.setCursorBufferPosition(jumpPoint.position);
-            editor.scrollToCursorPosition({center: true});
-          });
-      }
-    }
-  }
-
-  storeJumpPoint() {
-    const editor = atom.workspace.getActiveTextEditor();
-    const projectDirectory = helper.getProjectDirectory(editor.getPath());
-    var jumpPoints = this.jumpPoints[projectDirectory] ? this.jumpPoints[projectDirectory] : [];
-    jumpPoints.push({
-      uri: editor.getURI(),
-      position: editor.getCursorBufferPosition()
-    });
-    this.jumpPoints[projectDirectory] = jumpPoints;
   }
 
   watchProject(indexer, editor) {
@@ -282,4 +266,10 @@ export default class Core {
 
 function getDocsFilePath(cacheDirectory, packageName, version) {
   return path.resolve(cacheDirectory, 'docs', packageName, version, 'documentation.json');
+}
+
+function getConfig() {
+  return {
+    showAliasesOfType: atom.config.get('elmjutsu.showAliasesOfTypesInSidekick') || atom.config.get('elmjutsu.showAliasesOfTypesInTooltip') || false,
+  };
 }

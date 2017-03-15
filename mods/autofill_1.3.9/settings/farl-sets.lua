@@ -1,3 +1,0 @@
-return {
-  ["farl"] = {"fuels-high"}
-}

@@ -1,11 +1,10 @@
 'use babel';
 
-const _ = require('underscore-plus');
+import _ from 'underscore-plus';
 import fs from 'fs-extra';
 import path from 'path';
 import untildify from 'untildify';
 import PipeSelectionsView from './pipe-selections-view';
-import indexing from './indexing';
 import helper from './helper';
 
 export default class PipeSelections {
@@ -15,7 +14,7 @@ export default class PipeSelections {
     this.executeInRepl = executeInReplFunction;
     this.sendToRepl = sendToReplFunction;
     this.selectionMarkers = [];
-    this.view = new PipeSelectionsView(getPreludePath());
+    this.view = new PipeSelectionsView(indexer, getPreludePath());
     this.view.onDoExecute((code) => {
       return this.applyToEditor(code);
     });
@@ -46,7 +45,6 @@ export default class PipeSelections {
     this.previouslyFocusedElement = document.activeElement;
     this.panel.show();
     this.view.show(getPreludePath());
-    indexing.sendActiveFile(this.indexer, this.targetEditor);
     this.markSelections(this.targetEditor);
   }
 
@@ -61,13 +59,13 @@ export default class PipeSelections {
   applyToEditor(code) {
     const editor = this.targetEditor;
     const preludePath = getPreludePath();
-    if (!fs.existsSync(preludePath)) {
-      // TODO: Show notification.
-      return;
+    if (!helper.fileExists(preludePath)) {
+      return atom.notifications.addError('Could not find `Eval Prelude` file.', {
+        dismissable: true
+      });
     }
     const projectDirectory = helper.getProjectDirectory(preludePath);
     if (!projectDirectory) {
-      // TODO: Show notification.
       return;
     }
     // Ignore `elm-repl` banner.
@@ -127,8 +125,9 @@ export default class PipeSelections {
     try {
       prelude = fs.readFileSync(preludePath).toString();
     } catch (e) {
-      // TODO: Show notification.
-      return;
+      return atom.notifications.addError('Could not read `Eval Prelude` file.', {
+        dismissable: true
+      });
     }
     const selectedTexts = oldSelections.map((selection) => {
       return selection.getText();
@@ -159,9 +158,9 @@ export default class PipeSelections {
 }
 
 function getPreludePath() {
-  let preludePath = atom.config.get('elmjutsu.pipeSelectionsPreludePath');
+  let preludePath = atom.config.get('elmjutsu.evalPreludePath');
   if (!preludePath || preludePath.trim() === '') {
-    preludePath = path.join(path.dirname(atom.config.getUserConfigPath()), 'packages', 'elmjutsu', 'elm', 'PipeSelectionsPrelude.elm');
+    preludePath = path.join(path.dirname(atom.config.getUserConfigPath()), 'packages', 'elmjutsu', 'elm', 'EvalPrelude.elm');
   }
   return untildify(preludePath);
 }

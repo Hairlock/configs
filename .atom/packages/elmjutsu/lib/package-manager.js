@@ -3,7 +3,7 @@
 import childProcess from 'child_process';
 import path from 'path';
 import fs from 'fs-extra';
-import _ from 'underscore';
+import _ from 'underscore-plus';
 import helper from './helper';
 import InstallPackageView from './install-package-view';
 import UninstallPackageView from './uninstall-package-view';
@@ -16,10 +16,10 @@ export default class PackageManager {
     this.uninstallPackageView = new UninstallPackageView();
     this.elm = Elm.PackageManager.worker();
     this.elm.ports.showPackageListCmd.subscribe(([projectDirectory, packages]) => {
-      this.installPackageView.show();
       this.installPackageView.setPackages(projectDirectory, packages);
     });
     this.elm.ports.getPackageListFailedCmd.subscribe(() => {
+      this.installPackageView.hide();
       atom.notifications.addError('Failed to get list of packages from `http://package.elm-lang.org`', {dismissable: true});
     });
     this.installPackageView.onDidConfirm(({item}) => {
@@ -53,6 +53,7 @@ export default class PackageManager {
     if (filePath) {
       const projectDirectory = helper.getProjectDirectory(filePath);
       if (projectDirectory) {
+        this.installPackageView.show();
         this.elm.ports.getPackageListSub.send(projectDirectory);
       }
     }

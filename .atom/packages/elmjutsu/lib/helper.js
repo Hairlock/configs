@@ -1,24 +1,17 @@
 'use babel';
 
-const Range = require('atom').Range;
+import {Range} from 'atom';
 import path from 'path';
 import fs from 'fs-extra';
-const _ = require('underscore-plus');
+import _ from 'underscore-plus';
+import unicodeHelper from './unicode-helper';
 
 export default {
 
   getToken(editor) {
     const scopeDescriptor = editor.scopeDescriptorForBufferPosition(editor.getCursorBufferPosition());
-    if (this.isTokenAString(scopeDescriptor) || this.isTokenAComment(scopeDescriptor)) {
-      return '';
-    }
-    return editor.getWordUnderCursor({wordRegex: this.tokenRegex()}).trim();
-  },
-
-  // If the token is "A.B.C.foo", return true if the cursor is after the last period.
-  isCursorAtLastPartOfToken(editor) {
-    const scopeDescriptor = editor.scopeDescriptorForBufferPosition(editor.getCursorBufferPosition());
-    if (this.isTokenAString(scopeDescriptor) || this.isTokenAComment(scopeDescriptor)) {
+    // if (this.isScopeAString(scopeDescriptor) || this.isScopeAComment(scopeDescriptor)) {
+    if (this.isScopeAString(scopeDescriptor)) {
       return null;
     }
     const cursor = editor.getLastCursor();
@@ -27,24 +20,56 @@ export default {
       return null;
     }
     const column = editor.getCursorBufferPosition().column - startPoint.column;
-    const token = this.getToken(editor);
-    const lastIndex = token.lastIndexOf('.');
-    if (lastIndex < 0 || column > lastIndex) {
-      return true;
+    const token = editor.getWordUnderCursor({wordRegex: this.tokenRegex()}).trim();
+    return this.getTokenPartAtColumn(token, column);
+  },
+
+  getTokenPartAtColumn(token, column) {
+    if (token.length > 0) {
+      const lastIndex = token.lastIndexOf('.', column - 1);
+      const firstIndex = token.indexOf('.', lastIndex + 1);
+      let index = -1;
+      if (lastIndex > -1) {
+        if (firstIndex <= -1) {
+          index = token.length;
+        } else {
+          index = firstIndex;
+        }
+      } else {
+        index = firstIndex;
+      }
+      if (index > -1) {
+        return token.slice(0, index);
+      }
+      return token;
     }
-    return false;
+    return null;
+  },
+
+  // If the token is "A.B.C.foo", return true if the cursor is after the last period.
+  isCursorAtLastPartOfToken(editor) {
+    const token = this.getToken(editor);
+    if (token) {
+      const word = editor.getWordUnderCursor({wordRegex: this.tokenRegex()}).trim();
+      return !isCapitalized(token) || token === word;
+    }
+    return null;
   },
 
   tokenRegex() {
-    return /[a-zA-Z0-9_\'\|!%\$\+:\-\.=<>\/]+|\(,+\)/;
+    return new RegExp('[\\d' + unicodeHelper.letters() + '~`!@#\\$%\\^&\\*_\\-\\+=:;\\|\\\\<>\\.\\?\\/]+|\\(,+\\)');
   },
 
   blockRegex() {
-    return /(^{-\|([\s\S]*?)-}\s*|)(^(?!-|{)(\S+)\s(\s*(.|\n)*?(?=\n^\S|$(?![\r\n]))))/gm;
+    return /(^{-\|([\s\S]*?)-}\s*|)(^(?!-|{)([^:=\s]+)\s*(:|)(\s*(?:.|\r|\n)*?(?=\n^\S|$(?![\r\n]))))/gm;
   },
 
   moduleOrImportBlockRegex() {
     return /^(port module|module|import)\s/;
+  },
+
+  infixRegex() {
+    return /^(infix(?:l|r|))\s+(\d)\s+(.+)/;
   },
 
   typeAliasBlockRegex() {
@@ -68,19 +93,32 @@ export default {
   },
 
   allImportsRegex() {
-    return /((?:^|\n)import\s([\w\.]+)(?:\s+as\s+(\w+))?(?:\s+exposing\s*\(((?:\s*(?:\w+|\(.+\)|\w+\(.+\))\s*,)*)\s*((?:\.\.|\w+|\(.+\)|\w+\(.+\)))\s*\))?)+/m;
+    // TODO: Make this work even if there are comments.
+    return /((?:^|\n+)import\s([\w\.]+)(?:\s+as\s+(\w+))?(?:\s+exposing\s*\(((?:\s*(?:\w+|\(.+\)|\w+\(.+\))\s*,)*)\s*((?:\.\.|\w+|\(.+\)|\w+\(.+\)))\s*\))?)+/m;
   },
 
-  isTokenAString({scopes}) {
+  isScopeAString({scopes}) {
     return _.contains(scopes, 'string.quoted.double.elm');
   },
 
-  isTokenAComment({scopes}) {
+  isScopeAComment({scopes}) {
     return _.contains(scopes, 'comment.block.elm') || _.contains(scopes, 'comment.line.double-dash.elm');
   },
 
   isInfix(token) {
-    return new RegExp('^[~!@#$%^&*\\-+=:|<>.?/]+$').test(token);
+    if (!token) {
+      return false;
+    }
+    // Backtick (`), underscore (_), and semicolon (;) are not allowed in infixes.
+    return new RegExp(/^[~!@#\$%\^&\*\-\+=:\|\\<>\.\?\/]+$/).test(token);
+  },
+
+  commentsRegex() {
+    return /--.*$|{-[\s\S]*-}/gm;
+  },
+
+  removeComments(code) {
+    return code.replace(this.commentsRegex(), '');
   },
 
   formatSymbolName(valueName) {
@@ -88,9 +126,15 @@ export default {
     return valueName.trim().replace(/\(|\)/g, '');
   },
 
-  getActiveTopLevel(editor) {
+  formatTipe(tipe) {
+    // Replace whitespaces with single spaces, then remove comments.
+    return this.removeComments(tipe.trim().replace(/( |\n)+/g, ' '));
+  },
+
+  getActiveTopLevel(editor, position) {
+    position = position || editor.getCursorBufferPosition();
     let activeTopLevel = null;
-    editor.backwardsScanInBufferRange(this.blockRegex(), [[0, 0], editor.getCursorBufferPosition()], ({match, stop}) => {
+    editor.backwardsScanInBufferRange(this.blockRegex(), [[0, 0], position], ({match, stop}) => {
       stop();
       const block = match[3];
       if (!this.moduleOrImportBlockRegex().test(block) &&
@@ -103,28 +147,78 @@ export default {
     return activeTopLevel;
   },
 
+  getTypeAnnotationAbove(editor) {
+    let typeAnnotation = null;
+    editor.backwardsScanInBufferRange(this.blockRegex(), [[0, 0], [editor.getCursorBufferPosition().row, 0]], ({match, range, stop}) => {
+      stop();
+      const block = match[3];
+      if (!this.moduleOrImportBlockRegex().test(block) &&
+          !this.typeAliasBlockRegex().test(block) &&
+          !this.typeBlockRegex().test(block) &&
+          !this.portBlockRegex().test(block)) {
+            const text = block.replace(/\n/g, ' ');
+            if (/^\S+\s*:/.test(text)) {
+              typeAnnotation = text;
+            }
+      }
+    });
+    return typeAnnotation;
+  },
+
   scanForSymbolDefinitionRange(editor, symbol, func) {
+    let symbolDefinitionRegex;
+    const sourcePathParts = symbol.sourcePath.split(this.filePathSeparator());
+    const topLevel = sourcePathParts.length > 1 ? sourcePathParts[1] : null;
     const nameParts = symbol.fullName.split('.');
-    const lastName = nameParts[nameParts.length - 1];
-    const tipeCaseRegex = symbol.caseTipe ? '^(?:type\\s+' + _.escapeRegExp(symbol.caseTipe) + '(?:.|\\n)*?(?:(?:=|\\|)\\s+))(' + _.escapeRegExp(lastName) + ')(?:\\s|$)|' : '';
-    const prefixedRegex = '^(?:(?:import|type alias|type|port)\\s+)(' + _.escapeRegExp(lastName) + ')(?:\\s|$)|';
-    const moduleRegex = '^(?:(?:port module|module)\\s+)(' + _.escapeRegExp(symbol.fullName) + ')(?:\\s|$)|';
-    const functionRegex = '^(\\(?' + _.escapeRegExp(lastName) + '\\)?)(?:\\s(?!:.*))';
-    const symbolDefinitionRegex = new RegExp(tipeCaseRegex + prefixedRegex + moduleRegex + functionRegex, 'm');
+    const symbolName = nameParts[nameParts.length - 1];
+    if (topLevel) {
+      sourcePathParts.pop();
+      sourcePathParts.pop();
+      const numRecordLevels = sourcePathParts.length;
+      // TODO: This will not work if there are nested records with the same field names.
+      let recordLevelsRegex = '';
+      for (let i = 0; i <= numRecordLevels; ++i) {
+        recordLevelsRegex += '{(?:.|\\n)*?';
+      }
+      const recordRegex = '^(?:(?:type alias)\\s+)(?:' + _.escapeRegExp(topLevel) + ')(?:\\s+(?:.|\\n)*?' + recordLevelsRegex + ')(?:\\s*|,|{)(' + _.escapeRegExp(symbolName) + ')(?:\\s|:)|';
+      const prefixedRegex = '^(?:(?:import|type alias|type|port)\\s+)(' + _.escapeRegExp(symbolName) + ')(?:\\s|$)|';
+      const functionArgRegex = '^(?:\\(?' + _.escapeRegExp(topLevel) + '\\)?)(?:\\s(?!:).*)(' + _.escapeRegExp(symbolName) + ')';
+      symbolDefinitionRegex = new RegExp(recordRegex + prefixedRegex + functionArgRegex, 'mg');
+    } else {
+      const tipeCaseRegex = symbol.caseTipe ? '^(?:type\\s+' + _.escapeRegExp(symbol.caseTipe) + '(?:.|\\n)*?(?:(?:=|\\|)\\s+))(' + _.escapeRegExp(symbolName) + ')(?:\\s|$)|' : '';
+      const prefixedRegex = '^(?:(?:import|type alias|type|port)\\s+)(' + _.escapeRegExp(symbolName) + ')(?:\\s|$)|';
+      const moduleRegex = '^(?:(?:port module|module)\\s+)(' + _.escapeRegExp(symbolName) + ')(?:\\s|$)|';
+      const functionRegex = '^(\\(?' + _.escapeRegExp(symbolName) + '\\)?)(?:\\s(?!:.*))';
+      symbolDefinitionRegex = new RegExp(tipeCaseRegex + prefixedRegex + moduleRegex + functionRegex, 'mg');
+    }
     editor.scanInBufferRange(symbolDefinitionRegex, [[0, 0], editor.getEofBufferPosition()], ({match, range, stop}) => {
       const scopeDescriptor = editor.scopeDescriptorForBufferPosition(range.start);
-      if (!this.isTokenAString(scopeDescriptor) && !this.isTokenAComment(scopeDescriptor)) {
+      if (!this.isScopeAString(scopeDescriptor) && !this.isScopeAComment(scopeDescriptor)) {
+        stop();
         const symbolMatch = match[1] || match[2] || match[3];
         const matchLines = match[0].replace(/\n$/, '').split('\n');
         const matchEndsInNewline = match[0].endsWith('\n');
         const lastMatchLine = matchLines[matchLines.length-1];
         const rowOffset = matchLines.length - 1 + (lastMatchLine.length === 0 ? -1 : 0);
-        const columnOffset = lastMatchLine.length > 0 ? lastMatchLine.length - symbolMatch.length - 1 + (matchEndsInNewline ? 1 : 0) : 0;
-        stop();
+        const columnOffset = lastMatchLine.length > 0 ? lastMatchLine.length - symbolMatch.length - 1 + (matchEndsInNewline ? 1 : 0) + (topLevel && match[3] ? 1 : 0) : 0;
         const symbolRange = new Range(range.start.translate([rowOffset, columnOffset]), range.start.translate([rowOffset, columnOffset + symbolMatch.length]));
         func(symbolRange);
       }
     });
+  },
+
+  flashRange(editor, range, klass) {
+    if (editor.elmjutsuFlashMarker) {
+      editor.elmjutsuFlashMarker.destroy();
+    }
+    editor.elmjutsuFlashMarker = editor.markBufferRange(range, {invalidate: 'touch', persistent: false});
+    editor.decorateMarker(editor.elmjutsuFlashMarker, {type: 'highlight', class: klass});
+    setTimeout(() => {
+      if (editor && editor.elmjutsuFlashMarker) {
+        editor.elmjutsuFlashMarker.destroy();
+        editor.elmjutsuFlashMarker = null;
+      }
+    }, 300);
   },
 
   getTipeParts(sig) {
@@ -160,39 +254,36 @@ export default {
     return parts;
   },
 
-  splitArgs(argsString) {
+  getArgsParts(argsString) {
     if (!argsString || argsString.length === 0) {
       return [];
     }
-    let args = [];
+    let parts = [];
     let i = 0;
-    let openParens = {'()' : 0, '{}' : 0, '[]': 0};
+    let openParens = {'()' : 0, '{}' : 0};
     let acc = '';
     const n = argsString.length;
     while (i < n) {
       const ch = argsString[i];
-      if (openParens['()'] === 0 && openParens['{}'] === 0 && openParens['[]'] === 0 &&
-          ch === ' ') {
-        args.push(acc.trim());
+      if (openParens['()'] === 0 && openParens['{}'] === 0 && ch === ' ') {
+        parts.push(acc.trim());
         acc = '';
-        i++;
+        i ++;
       } else {
         switch (ch) {
           case '(': openParens['()']++; break;
           case ')': openParens['()']--; break;
           case '{': openParens['{}']++; break;
           case '}': openParens['{}']--; break;
-          case '[': openParens['[]']++; break;
-          case ']': openParens['[]']--; break;
         }
         acc += ch;
         i++;
         if (i === n) {
-          args.push(acc.trim());
+          parts.push(acc.trim());
         }
       }
     }
-    return args;
+    return parts;
   },
 
   defaultImports() {
@@ -278,7 +369,34 @@ export default {
   },
 
   getProjectDirectory(filePath) {
-    return getProjectDirectoryRecur(path.dirname(filePath));
+    return this.getProjectDirectoryRecur(path.dirname(filePath));
+  },
+
+  // Copied from `linter-elm-make`.
+  getProjectDirectoryRecur(directory) {
+    if (this.fileExists(path.join(directory, 'elm-package.json'))) {
+      return directory;
+    } else {
+      const parentDirectory = path.join(directory, '..');
+      if (parentDirectory === directory) {
+        atom.notifications.addError('Could not find `elm-package.json`.', {
+          dismissable: true
+        });
+        return null;
+      } else {
+        return this.getProjectDirectoryRecur(parentDirectory);
+      }
+    }
+  },
+
+  fileExists(filePath) {
+    try {
+      if (fs.statSync(filePath)) {
+        return true;
+      }
+    } catch (e) {
+    }
+    return false;
   },
 
   isElmEditor(editor) {
@@ -325,7 +443,6 @@ export default {
 
   readJson(filePath) {
     try {
-      // return JSON.parse(fs.readFileSync(filePath).toString());
       return fs.readJsonSync(filePath);
     } catch(e) {
       this.log('Error reading ' + filePath + ': ' + e, 'red');
@@ -335,30 +452,37 @@ export default {
 
   writeJson(filePath, json) {
     try {
-      // fs.writeFileSync(filePath, JSON.stringify(json, null, 4));
       fs.writeJsonSync(filePath, json, {spaces: 4});
       return true;
     } catch(e) {
       this.log('Error writing to ' + filePath + ': ' + e, 'red');
     }
     return false;
+  },
+
+  getLeadingSpaces(text) {
+    const numLeadingSpaces = text.search(/\S|$/) + 1;
+    return new Array(numLeadingSpaces).join(' ');
+  },
+
+  usagesViewURI() {
+    return 'elmjutsu-usages-view://';
+  },
+
+  holeToken() {
+    return '?';
+  },
+
+  tabSpaces() {
+    return '    ';
+  },
+
+  filePathSeparator() {
+    return ' > ';
   }
 
 };
 
-// Copied from `linter-elm-make`.
-function getProjectDirectoryRecur(directory) {
-  if (fs.existsSync(path.join(directory, 'elm-package.json'))) {
-    return directory;
-  } else {
-    const parentDirectory = path.join(directory, '..');
-    if (parentDirectory === directory) {
-      atom.notifications.addError('Could not find `elm-package.json`.', {
-        dismissable: true
-      });
-      return null;
-    } else {
-      return getProjectDirectoryRecur(parentDirectory);
-    }
-  }
+function isCapitalized(token) {
+  return token[0] === token[0].toUpperCase();
 }

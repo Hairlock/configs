@@ -1,8 +1,5 @@
 'use babel';
 
-import Config from './config';
-import QuickFixView from './quick-fix-view';
-import SetMainPathsView from './set-main-paths-view';
 import {Range, CompositeDisposable} from 'atom';
 import path from 'path';
 import fs from 'fs-extra';
@@ -10,8 +7,14 @@ import tmp from 'tmp';
 import _ from 'underscore';
 import chokidar from 'chokidar';
 import readDir from 'readdir';
-import Queue from 'promise-queue';
+import Queue from 'better-queue';
 const atomLinter = require('atom-linter');
+import Config from './config';
+import QuickFixView from './quick-fix-view';
+import SetMainPathsView from './set-main-paths-view';
+import quickFixing from './quick-fixing';
+import formatting from './formatting';
+import helper from './helper';
 
 export default {
   config: Config,
@@ -42,11 +45,35 @@ export default {
       };
     }
     this.subscriptions = new CompositeDisposable();
-    this.lintQueue = new Queue(1, Infinity);
+    this.lintQueue = new Queue(({editorFilePath, projectDirectory, editor, resolve}, callback) => {
+      let progressIndicator;
+      if (this.statusBar) {
+        progressIndicator = this.statusBar.addLeftTile({
+          item: createProgressIndicator(),
+          priority: 1
+        });
+      }
+      self.doLint(editorFilePath, projectDirectory, editor)
+        .then((result) => {
+          if (progressIndicator) {
+            progressIndicator.destroy();
+          }
+          resolve(result);
+          callback(null, editor.id);
+        });
+    }, {
+      concurrent: 1,
+      filo: true,
+      id: ({editor}, callback) => {
+        // Will replace task with the same `editor.id`.
+        callback(null, editor.id);
+      }
+    });
     this.workDirectories = {};
     this.watchers = {};
     this.problems = {};
     this.quickFixes = {};
+    this.typeAnnotationMarkers = {};
     this.quickFixView = new QuickFixView();
     this.setMainPathsView = new SetMainPathsView();
     this.subscriptions.add(atom.commands.add('atom-text-editor', {
@@ -61,13 +88,13 @@ export default {
     }));
     const self = this;
     this.quickFixView.onDidConfirm(({editor, range, fix}) => {
-      fixProblem(editor, range, fix);
+      quickFixing.fixProblem(editor, range, fix);
       self.clearElmEditorProblemsAndFixes(editor);
     });
     this.setMainPathsView.onDidConfirm(({projectDirectory, mainPaths}) => {
       const jsonFilePath = path.join(projectDirectory, 'linter-elm-make.json');
       let json;
-      if (fs.existsSync(jsonFilePath)) {
+      if (helper.fileExists(jsonFilePath)) {
         json = fs.readJsonSync(jsonFilePath, {throws: false});
         if (!json) {
           atom.notifications.addError('Error reading `linter-elm-make.json`', {dismissable: true});
@@ -106,7 +133,7 @@ export default {
           if (editor.isModified()) {
             const editorFilePath = editor.getPath();
             if (editorFilePath) {
-              const projectDirectory = lookupElmPackage(path.dirname(editorFilePath));
+              const projectDirectory = helper.lookupElmPackage(path.dirname(editorFilePath));
               const workDirectory = self.workDirectories[projectDirectory];
               if (workDirectory) {
                 const workFilePath = path.join(workDirectory, editorFilePath.replace(projectDirectory, ''));
@@ -119,11 +146,11 @@ export default {
       // TODO When do we delete a project's entries in `this.problems`?
     };
     this.subscriptions.add(atom.workspace.observeTextEditors((editor) => {
-      if (isElmEditor(editor)) {
+      if (helper.isElmEditor(editor)) {
         subscribeToElmEditorEvents(editor);
       }
       self.subscriptions.add(editor.onDidChangePath((path) => {
-        if (isElmEditor(editor)) {
+        if (helper.isElmEditor(editor)) {
           subscribeToElmEditorEvents(editor);
         } else {
           self.clearElmEditorProblemsAndFixes(editor);
@@ -132,18 +159,18 @@ export default {
     }));
     this.prevElmEditor = null;
     this.subscriptions.add(atom.workspace.observeActivePaneItem((item) => {
-      if (item && isElmEditor(item)) {
+      if (item && helper.isElmEditor(item)) {
         if (atom.config.get('linter-elm-make.lintOnTheFly')) {
           if (self.prevElmEditor) {
             // When an editor loses focus, update the associated work file.
             const prevTextEditorPath = self.prevElmEditor.getPath();
             if (prevTextEditorPath) {
-              const projectDirectory = lookupElmPackage(path.dirname(prevTextEditorPath));
+              const projectDirectory = helper.lookupElmPackage(path.dirname(prevTextEditorPath));
               if (projectDirectory) {
                 const workDirectory = self.workDirectories[projectDirectory];
                 if (workDirectory) {
                   const workFilePath = path.join(workDirectory, prevTextEditorPath.replace(projectDirectory, ''));
-                  if (fs.existsSync(workFilePath)) {
+                  if (helper.fileExists(workFilePath)) {
                     // Ignore if work file does not exist, yet.
                     fs.writeFileSync(workFilePath, self.prevElmEditor.getText());
                   }
@@ -158,6 +185,7 @@ export default {
         }
         self.updateLinterUI();
       } else {
+        self.hideQuickFixesIndicators();
         self.prevElmEditor = null;
       }
     }));
@@ -169,6 +197,7 @@ export default {
     }
     this.subscriptions.dispose();
     this.subscriptions = null;
+    this.lintQueue.destroy();
     this.lintQueue = null;
     this.workDirectories = null;
     this.watchers = null;
@@ -183,25 +212,39 @@ export default {
       this.quickFixesIndicator.destroy();
       this.quickFixesIndicator = null;
     }
+    this.hideQuickFixesIndicators();
+    destroyAllMarkers(this.typeAnnotationMarkers);
+    this.typeAnnotationMarkers = null;
+  },
+  hideQuickFixesIndicators() {
+    if (this.quickFixesTooltip) {
+      this.quickFixesTooltip.dispose();
+      this.quickFixesTooltip = null;
+    }
+    if (this.quickFixesIndicator) {
+      this.quickFixesIndicator.item.innerHTML = '';
+    }
   },
   clearElmEditorProblemsAndFixes(editor) {
     const editorFilePath = editor.getPath();
     if (this.problems[editorFilePath]) { delete this.problems[editorFilePath]; }
     if (this.quickFixes[editorFilePath]) { delete this.quickFixes[editorFilePath]; }
+    destroyEditorMarkers(this.typeAnnotationMarkers, editor.id);
+    this.typeAnnotationMarkers[editor.id] = [];
   },
   quickFix() {
     const fixesForCursorPosition = this.getFixesAtCursorPosition();
     if (fixesForCursorPosition) {
       this.quickFixView.show(atom.workspace.getActiveTextEditor(), fixesForCursorPosition.range, fixesForCursorPosition.fixes);
     } else {
-      atom.notifications.addError('No quick fixes found');
+      showNoQuickFixesFound();
     }
   },
   quickFixAll() {
     const editor = atom.workspace.getActiveTextEditor();
     let markers = [];
     let marker = null;
-    const quickFixes = this.quickFixes[editor.getPath()] || this.computeQuickFixesForEditor(editor);
+    const quickFixes = this.allQuickFixes(editor);
     if (quickFixes) {
       editor.transact(() => {
         quickFixes.forEach(({range, fixes}) => {
@@ -210,7 +253,7 @@ export default {
           markers.push(marker);
         });
         markers.forEach((marker) => {
-          fixProblem(editor, marker.getBufferRange(), marker.getProperties().fixes[0]);
+          quickFixing.fixProblem(editor, marker.getBufferRange(), marker.getProperties().fixes[0]);
           marker.destroy();
         });
         markers = null;
@@ -218,22 +261,25 @@ export default {
       this.clearElmEditorProblemsAndFixes(editor);
     }
   },
+  allQuickFixes(editor) {
+    return this.quickFixes[editor.getPath()] || this.computeQuickFixesForEditor(editor);
+  },
   toggleLintOnTheFly() {
-    const lintOnTheFly = toggleConfig('linter-elm-make.lintOnTheFly');
+    const lintOnTheFly = helper.toggleConfig('linter-elm-make.lintOnTheFly');
     atom.notifications.addInfo('"Lint On The Fly" is now ' + (lintOnTheFly ? 'ON' : 'OFF'), {});
     if (lintOnTheFly) {
       forceLintActiveElmEditor();
     }
   },
   toggleAlwaysCompileMain() {
-    const alwaysCompileMain = toggleConfig('linter-elm-make.alwaysCompileMain');
+    const alwaysCompileMain = helper.toggleConfig('linter-elm-make.alwaysCompileMain');
     atom.notifications.addInfo('"Always Compile Main" is now ' + (alwaysCompileMain ? 'ON' : 'OFF'), {});
     if (atom.config.get('linter-elm-make.lintOnTheFly')) {
       forceLintActiveElmEditor();
     }
   },
   toggleReportWarnings() {
-    const reportWarnings = toggleConfig('linter-elm-make.reportWarnings');
+    const reportWarnings = helper.toggleConfig('linter-elm-make.reportWarnings');
     atom.notifications.addInfo('"Report Warnings" is now ' + (reportWarnings ? 'ON' : 'OFF'), {});
     if (atom.config.get('linter-elm-make.lintOnTheFly')) {
       forceLintActiveElmEditor();
@@ -243,13 +289,13 @@ export default {
     const editor = atom.workspace.getActiveTextEditor();
     const editorFilePath = editor.getPath();
     if (editorFilePath) {
-      const projectDirectory = lookupElmPackage(path.dirname(editorFilePath));
+      const projectDirectory = helper.lookupElmPackage(path.dirname(editorFilePath));
       if (!projectDirectory) {
         return;
       }
       const jsonFilePath = path.join(projectDirectory, 'linter-elm-make.json');
       let json;
-      if (fs.existsSync(jsonFilePath)) {
+      if (helper.fileExists(jsonFilePath)) {
         json = fs.readJsonSync(jsonFilePath, {throws: false});
       }
       const mainPaths = (json && json.mainPaths) || [];
@@ -261,7 +307,7 @@ export default {
     const editor = atom.workspace.getActiveTextEditor();
     const editorFilePath = editor.getPath();
     let deleteBuildArtifacts = (directory) => {
-      if (!fs.existsSync(directory)) {
+      if (!helper.fileExists(directory)) {
         return false;
       }
       const files = fs.readdirSync(directory);
@@ -277,10 +323,10 @@ export default {
     getProjectBuildArtifactsDirectory(editorFilePath)
       .then(buildArtifactsDirectory => {
         if (buildArtifactsDirectory) {
-          const projectDirectory = lookupElmPackage(path.dirname(editorFilePath));
+          const projectDirectory = helper.lookupElmPackage(path.dirname(editorFilePath));
           const buildArtifactsDirectoryCleared = deleteBuildArtifacts(buildArtifactsDirectory);
           if (buildArtifactsDirectoryCleared && atom.config.get('linter-elm-make.logDebugMessages')) {
-            devLog('Cleared project directory build artifacts - ' + buildArtifactsDirectory, 'green');
+            helper.devLog('Cleared project directory build artifacts - ' + buildArtifactsDirectory, 'green');
           }
           if (atom.config.get('linter-elm-make.lintOnTheFly')) {
             // If linting on the fly, also delete the build artifacts in the work directory.
@@ -290,7 +336,7 @@ export default {
                 const workDirectoryBuildArtifactsDirectory = buildArtifactsDirectory.replace(projectDirectory, workDirectory);
                 const workDirectoryBuildArtifactsDirectoryCleared = deleteBuildArtifacts(workDirectoryBuildArtifactsDirectory);
                 if (workDirectoryBuildArtifactsDirectoryCleared && atom.config.get('linter-elm-make.logDebugMessages')) {
-                  devLog('Cleared work directory build artifacts - ' + workDirectoryBuildArtifactsDirectory, 'green');
+                  helper.devLog('Cleared work directory build artifacts - ' + workDirectoryBuildArtifactsDirectory, 'green');
                 }
               }
             }
@@ -299,11 +345,36 @@ export default {
         }
       });
   },
+  provideIntentions: function() {
+    const self = this;
+    return {
+      grammarScopes: ['source.elm'],
+      getIntentions: function({textEditor, bufferPosition}) {
+        const fixesForCursorPosition = self.getFixesAtCursorPosition();
+        if (fixesForCursorPosition) {
+          return fixesForCursorPosition.fixes.map((fix) => {
+            return {
+              // Since `Intentions` does not allow specifying HTML, do a workaround here:
+              class: 'linter-elm-make-fix--' + fix.type.toLowerCase().replace(/ /g, '-'),
+              title: fix.text,
+              selected: function() {
+                quickFixing.fixProblem(textEditor, fixesForCursorPosition.range, fix);
+                self.clearElmEditorProblemsAndFixes(textEditor);
+              }
+            };
+          });
+        } else {
+          showNoQuickFixesFound();
+          return [];
+        }
+      }
+    };
+  },
   provideLinter() {
     const proc = process;
     const self = this;
     const linter = {
-      name: 'Elm',
+      // name: 'Elm',
       grammarScopes: ['source.elm'],
       scope: 'project',
       lintOnFly: true,
@@ -312,16 +383,16 @@ export default {
         if (!editorFilePath) {
           return [];
         }
-        const projectDirectory = lookupElmPackage(path.dirname(editorFilePath));
+        const projectDirectory = helper.lookupElmPackage(path.dirname(editorFilePath));
         if (projectDirectory === null) {
           return [];
         }
         return new Promise((resolve) => {
-          self.lintQueue.add(() => {
-            return self.doLint(editorFilePath, projectDirectory, editor)
-              .then((result) => {
-                return resolve(result);
-              });
+          self.lintQueue.push({
+            editorFilePath,
+            projectDirectory,
+            editor,
+            resolve
           });
         });
       }
@@ -345,6 +416,23 @@ export default {
     this.subscriptions.add(atom.config.observe('linter-elm-make.workDirectory', workDirectory => {
       removeWatchersAndWorkDirectories();
     }));
+    this.subscriptions.add(atom.config.observe('linter-elm-make.showInferredTypeAnnotations', show => {
+      if (!show) {
+        destroyAllMarkers(self.typeAnnotationMarkers);
+        self.typeAnnotationMarkers = {};
+      }
+    }));
+    this.subscriptions.add(atom.config.observe('linter-elm-make.autoscrollIssueIntoView', autoscroll => {
+      if (!autoscroll) {
+        const linterPanel = helper.getLinterPanel();
+        if (linterPanel) {
+          if (self.prevProblemAnchor) {
+            self.prevProblemAnchor.parentNode.parentNode.parentNode.className = 'linter-elm-make-issue';
+            self.prevProblemAnchor = null;
+          }
+        }
+      }
+    }));
     return linter;
   },
   maybeCopyProjectToWorkDirectory(projectDirectory) {
@@ -356,8 +444,8 @@ export default {
           const workDirectory = path.resolve(projectDirectory, configWorkDirectory);
           self.workDirectories[projectDirectory] = workDirectory;
           // If work directory does not exist, create it and copy source files from project directory.
-          if (!fs.existsSync(workDirectory)) {
-            devLog('Created work directory - ' + projectDirectory + ' -> ' + workDirectory, 'green');
+          if (!helper.fileExists(workDirectory)) {
+            helper.devLog('Created work directory - ' + projectDirectory + ' -> ' + workDirectory, 'green');
             const self = this;
             self.copyProjectToWorkDirectory(projectDirectory, workDirectory)
               .then(() => {
@@ -378,7 +466,6 @@ export default {
       if (isASourceDirectoryOutsideProjectDirectory(projectDirectory)) {
         return resolve([]);
       }
-
       this.maybeCopyProjectToWorkDirectory(projectDirectory)
         .then(() => {
           if (atom.config.get('linter-elm-make.lintOnTheFly')) {
@@ -386,7 +473,7 @@ export default {
             if (!self.workDirectories[projectDirectory]) {
               // Create a temporary directory for the project.
               const workDirectory = tmp.dirSync({prefix: 'linter-elm-make'}).name;
-              devLog('Created temporary work directory - ' + workDirectory + ' -> ' + projectDirectory, 'green');
+              helper.devLog('Created temporary work directory - ' + workDirectory + ' -> ' + projectDirectory, 'green');
               self.workDirectories[projectDirectory] = workDirectory;
               self.copyProjectToWorkDirectory(projectDirectory, workDirectory)
                 .then(() => {
@@ -413,7 +500,7 @@ export default {
     const self = this;
     return new Promise((resolve) => {
       atom.notifications.addInfo('Copying project files to work directory `' + workDirectory + '`...', {});
-      devLog('Syncing work directory with project directory - ' + projectDirectory + ' -> ' + workDirectory);
+      helper.devLog('Syncing work directory with project directory - ' + projectDirectory + ' -> ' + workDirectory);
       // Use `setTimeout` to show the above notification immediately.
       setTimeout(() => {
         if (options && options.deleteSourceDirectoriesInWorkDirectory) {
@@ -430,7 +517,7 @@ export default {
         // Copy `elm-stuff` to work directory.
         // Assumes that work directory is not inside `elm-stuff`.
         const elmStuffFilePath = path.join(projectDirectory, 'elm-stuff');
-        if (fs.existsSync(elmStuffFilePath)) {
+        if (helper.fileExists(elmStuffFilePath)) {
           fs.copySync(elmStuffFilePath, path.join(workDirectory, 'elm-stuff'), copyOptions);
         }
         // Copy source directories to work directory.
@@ -459,8 +546,8 @@ export default {
 
           parentSourceDirectories.forEach((projectSourceDirectory) => {
             const workSourceDirectory = projectSourceDirectory.replace(projectDirectory, workDirectory);
-            if (fs.existsSync(projectSourceDirectory)) {
-              devLog('> Copying project source directory to work directory - ' + projectSourceDirectory + ' -> ' + workSourceDirectory);
+            if (helper.fileExists(projectSourceDirectory)) {
+              helper.devLog('> Copying project source directory to work directory - ' + projectSourceDirectory + ' -> ' + workSourceDirectory);
               // If work directory is inside project directory...
               if ((workDirectory + path.sep).startsWith(projectDirectory)) {
                 const projectFilePaths = readDir.readSync(projectSourceDirectory, null, readDir.ABSOLUTE_PATHS);
@@ -472,15 +559,15 @@ export default {
                 fs.copySync(projectSourceDirectory, workSourceDirectory, copyOptionsWithElmFilter);
               }
               if (atom.config.get('linter-elm-make.logDebugMessages')) {
-                if (fs.existsSync(workSourceDirectory)) {
-                  devLog('> Copied project source directory to work directory - ' + projectSourceDirectory + ' -> ' + workSourceDirectory, 'green');
+                if (helper.fileExists(workSourceDirectory)) {
+                  helper.devLog('> Copied project source directory to work directory - ' + projectSourceDirectory + ' -> ' + workSourceDirectory, 'green');
                 }
               }
             }
           });
         }
         atom.notifications.addSuccess('Copied project files to work directory `' + workDirectory + '`', {});
-        devLog('Synched work directory with project directory - ' + projectDirectory + ' -> ' + workDirectory, 'green');
+        helper.devLog('Synched work directory with project directory - ' + projectDirectory + ' -> ' + workDirectory, 'green');
         return resolve();
       }, 0);
     });
@@ -508,7 +595,7 @@ export default {
          filePath === path.join(projectDirectory, 'elm-stuff', 'exact-dependencies.json') ||
          filePath.startsWith(path.join(projectDirectory, 'elm-stuff', 'packages')) ||
          path.extname(filePath) === '.elm')) {
-         devLog('`add` detected - ' + filePath);
+         helper.devLog('`add` detected - ' + filePath);
         fs.copySync(filePath, path.join(workDirectory, filename));
       }
     });
@@ -517,14 +604,14 @@ export default {
     //   if (!filePath.startsWith(workDirectory + path.sep) &&
     //     filePath.startsWith(path.join(projectDirectory, 'elm-stuff', 'packages'))) {
     //     if (atom.config.get('linter-elm-make.logDebugMessages')) {
-    //       devLog('`addDir` detected - ' + filePath);
+    //       helper.devLog('`addDir` detected - ' + filePath);
     //     }
     //     fs.mkdirsSync(path.join(workDirectory, filename));
     //   }
     // });
     watcher.on('unlink', (filename) => {
       const filePath = path.join(projectDirectory, filename);
-      devLog('`unlink` detected - ' + filePath);
+      helper.devLog('`unlink` detected - ' + filePath);
       if (!filePath.startsWith(workDirectory + path.sep)) {
         fs.removeSync(path.join(workDirectory, filename));
         // TODO Only force lint if active editor is inside `projectDirectory`.
@@ -535,7 +622,7 @@ export default {
     });
     watcher.on('unlinkDir', (dirname) => {
       const dirPath = path.join(projectDirectory, dirname);
-      devLog('`unlinkDir` detected - ' + dirPath);
+      helper.devLog('`unlinkDir` detected - ' + dirPath);
       if (!dirPath.startsWith(workDirectory + path.sep)) {
         fs.removeSync(path.join(workDirectory, dirname));
       }
@@ -545,7 +632,7 @@ export default {
       if (!filePath.startsWith(workDirectory + path.sep)) {
         if (filePath === path.join(projectDirectory, 'elm-package.json') ||
             filePath === path.join(projectDirectory, 'elm-stuff', 'exact-dependencies.json')) {
-         devLog('`change` detected - ' + filename);
+         helper.devLog('`change` detected - ' + filename);
 
         if (!isASourceDirectoryOutsideProjectDirectory(projectDirectory)) {
           // TODO Only do `copyProjectToWorkDirectory` if the value of "source-directories" was changed.
@@ -563,7 +650,7 @@ export default {
           const workDirectory = this.workDirectories[projectDirectory];
           if (workDirectory) {
             const workFilePath = path.join(workDirectory, filePath.replace(projectDirectory, ''));
-            if (fs.existsSync(workFilePath)) {
+            if (helper.fileExists(workFilePath)) {
               // Ignore if work file does not exist, yet.
               fs.writeFileSync(workFilePath, fs.readFileSync(filePath).toString());
             }
@@ -583,7 +670,7 @@ export default {
         sourceDirectories.forEach((sourceDirectory) => {
           const workDirectorySourceDirectory = path.resolve(workDirectory, sourceDirectory);
           fs.removeSync(workDirectorySourceDirectory);
-          devLog('> Deleted source directory in work directory - ' + workDirectorySourceDirectory, 'green');
+          helper.devLog('> Deleted source directory in work directory - ' + workDirectorySourceDirectory, 'green');
         });
       }
     }
@@ -591,7 +678,7 @@ export default {
   provideGetWorkDirectory() {
     const self = this;
     return (filePath) => {
-      const projectDirectory = lookupElmPackage(path.dirname(filePath));
+      const projectDirectory = helper.lookupElmPackage(path.dirname(filePath));
       if (projectDirectory === null) {
         return null;
       }
@@ -601,7 +688,7 @@ export default {
   compileInWorkDirectory(editorFilePath, workDirectory, editor, projectDirectory) {
     const workFilePath = path.join(workDirectory, editorFilePath.replace(projectDirectory, ''));
     // Write contents of active editor to associated compile file.
-    if (fs.existsSync(workFilePath)) {
+    if (helper.fileExists(workFilePath)) {
       // Ignore if work file does not exist, yet.
       fs.writeFileSync(workFilePath, editor.getText());
     }
@@ -628,7 +715,7 @@ export default {
   },
   getMainFilePaths(projectDirectory) {
     const elmPackageJsonFilePath = path.join(projectDirectory, 'elm-package.json');
-    if (!fs.existsSync(elmPackageJsonFilePath)) {
+    if (!helper.fileExists(elmPackageJsonFilePath)) {
       return null;
     }
     const elmPackageJson = fs.readJsonSync(elmPackageJsonFilePath, {throws: false});
@@ -637,7 +724,7 @@ export default {
     }
     const linterElmMakeJsonFilePath = path.join(projectDirectory, 'linter-elm-make.json');
     let linterElmMakeJson;
-    if (fs.existsSync(linterElmMakeJsonFilePath)) {
+    if (helper.fileExists(linterElmMakeJsonFilePath)) {
       linterElmMakeJson = fs.readJsonSync(linterElmMakeJsonFilePath, {throws: false});
     }
     const mainPaths = linterElmMakeJson && linterElmMakeJson.mainPaths;
@@ -652,7 +739,7 @@ export default {
       try {
         return mainPaths.map((mainPath) => {
           const mainFilePath = path.resolve(projectDirectory, mainPath);
-          if (!fs.existsSync(mainFilePath)) {
+          if (!helper.fileExists(mainFilePath)) {
             atom.notifications.addError('The main path `' + mainPath + '` does not exist', {
               detail: errorDetail,
               dismissable: true
@@ -697,7 +784,7 @@ export default {
           })
           .filter((mainFilePath) => {
             // TODO If `Main.elm` does not exist, look for the file containing `main =`?
-            return fs.existsSync(mainFilePath);
+            return helper.fileExists(mainFilePath);
           });
         if (mainFilePaths.length > 0) {
           return mainFilePaths;
@@ -722,37 +809,28 @@ export default {
   },
   executeElmMake(editorFilePath, inputFilePath, cwd, editor, projectDirectory) {
     const executablePath = atom.config.get('linter-elm-make.elmMakeExecutablePath');
-
-    let progressIndicator;
-    if (this.statusBar) {
-      progressIndicator = this.statusBar.addLeftTile({
-        item: createProgressIndicator(),
-        priority: 1
-      });
-    }
-
     let args = [inputFilePath, '--report=json', '--output=/dev/null', '--yes'];
     if (atom.config.get('linter-elm-make.reportWarnings')) {
       args.push('--warn');
     }
     let self = this;
-    devLog('Executing ' + executablePath + ' ' + args.join(' ') + ' (initiated from ' + editorFilePath + ')');
+    helper.devLog('Executing ' + executablePath + ' ' + args.join(' ') + ' (initiated from ' + editorFilePath + ')');
     return atomLinter.exec(executablePath, args, {
       stream: 'both', // stdout and stderr
       cwd: cwd,
       env: process.env
     })
     .then(data => {
-      let result;
-      // filter haskell memory error messages
-      // see https://ghc.haskell.org/trac/ghc/ticket/12495
-      data.stderr = data.stderr.split("\n").filter((line) => line !== "elm-make: unable to decommit memory: Invalid argument").join("\n");
-      if (data.stderr === '') {
-        result = self.parseStdout(data.stdout, editorFilePath, cwd, editor, projectDirectory);
-      } else {
-        result = self.parseStderr(data.stderr, editorFilePath);
-      }
-      progressIndicator && progressIndicator.destroy();
+      self.clearElmEditorProblemsAndFixes(editor);
+      // Filter Haskell memory error messages (see https://ghc.haskell.org/trac/ghc/ticket/12495).
+      data.stderr = data.stderr.split('\n').filter((line) => line !== 'elm-make: unable to decommit memory: Invalid argument').join('\n');
+      const result = data.stderr === '' ?
+        self.parseStdout(data.stdout, editorFilePath, cwd, editor, projectDirectory) :
+        self.parseStderr(data.stderr, editorFilePath);
+      // Only compute quick fixes for the active editor.
+      // Quick fixes for the other editors will be computed on demand (upon calling `quick-fix` or `quick-fix-all`).
+      self.computeQuickFixesForEditor(editor);
+      self.maybeShowInferredTypeAnnotations(editor);
       self.updateLinterUI();
       return result;
     })
@@ -761,7 +839,6 @@ export default {
         detail: errorMessage,
         dismissable: true
       });
-      progressIndicator && progressIndicator.destroy();
       self.updateLinterUI();
       return [];
     });
@@ -777,40 +854,37 @@ export default {
       })();
       if (!json) {
         return [];
-      } else {
-        if (!atom.config.get('linter-elm-make.reportWarnings')) {
-          json = json.filter(problem => { return problem.type !== 'warning'; });
-        }
-        return json.map((problem) => {
-          const colorize = ((msg) => {
-            return msg.split("[33m").join("<span style='color:orange'>")
-              .split("[0m").join("</span>")
-              .split(" `").join(" `<span style='font-weight:bold'>")
-              .split("` ").join("</span>` ");
-          });
-          const range = new Range(
-            [problem.region.start.line - 1, problem.region.start.column - 1],
-            [problem.region.end.line - 1, problem.region.end.column - 1]
-          );
-          let filePath = problem.file;
-          if (problem.file.startsWith('.' + path.sep)) {
-            // `problem.file` has a relative path (e.g. `././A.elm`) . Convert to absolute.
-            filePath = path.join(cwd, path.normalize(problem.file));
-          }
-          if (cwd !== projectDirectory) {
-            // problem.file is a work file
-            filePath = filePath.replace(cwd, projectDirectory);
-          }
-          // HACK: Add an anchor so that we can scroll the relevant message into view when the cursor position changes.
-          return {
-            type: problem.type,
-            html: `<a class='${getAnchorForMessage(filePath, range)}'></a>${colorize(_.escape(problem.overview))}<br/><br/>${colorize(_.escape(problem.details).split('\n').join('<br/>&nbsp;'))}`,
-            filePath: filePath,
-            range: range,
-            problem: problem
-          };
-        });
       }
+      if (!atom.config.get('linter-elm-make.reportWarnings')) {
+        json = json.filter(problem => { return problem.type !== 'warning'; });
+      }
+      return json.map((problem) => {
+        const regionRange = helper.regionToRange(problem.region);
+        const subregionRange = helper.regionToRange(problem.subregion);
+        let filePath = problem.file;
+        if (problem.file.startsWith('.' + path.sep)) {
+          // `problem.file` has a relative path (e.g. `././A.elm`) . Convert to absolute.
+          filePath = path.join(cwd, path.normalize(problem.file));
+        }
+        if (cwd !== projectDirectory) {
+          // problem.file is a work file
+          filePath = filePath.replace(cwd, projectDirectory);
+        }
+        return {
+          type: problem.type,
+          // HACK: Add an anchor so that we can scroll the relevant message into view when the cursor position changes.
+          html:
+            '<div style="visibility:collapsed" class="' + getAnchorForMessage(filePath, regionRange, subregionRange) + '"></div>' +
+            '<div class="linter-elm-make-problem-overview">' + _.escape(problem.overview) + '</div><br>' +
+            formatting.formatProblemDetails(problem) +
+            '<br>', // There's an extra line break here so that the line and column info from linter will be at the next line.
+          filePath,
+          range: subregionRange || regionRange,
+          regionRange,
+          subregionRange,
+          problem
+        };
+      });
     });
     const problemsWithoutWorkFiles = problemsByLine.map((problems) => {
       return problems.filter((problem) => {
@@ -821,7 +895,7 @@ export default {
     const allProblems = _.flatten(problemsWithoutWorkFiles, true);
     // Store problems for each file path.
     const uniqueFilePaths = new Set(allProblems.map(({filePath}) => filePath));
-    let getProblemsOfFilePath = (fpath) => {
+    const getProblemsOfFilePath = (fpath) => {
       return allProblems.filter(({filePath}) => {
         return filePath === fpath;
       });
@@ -829,9 +903,6 @@ export default {
     for (let filePath of uniqueFilePaths) {
       this.problems[filePath] = getProblemsOfFilePath(filePath);
     }
-    // Only compute quick fixes for the active editor.
-    // Quick fixes for the other editors will be computed on demand (upon calling `quick-fix` or `quick-fix-all`).
-    this.computeQuickFixesForEditor(editor);
     return allProblems;
   },
   parseStderr(stderr, editorFilePath) {
@@ -846,17 +917,19 @@ export default {
         });
       }
     });
-    return [
-      {
-        type: "error",
-        html: `${stderrLines.map((line) => { return _.escape(line); }).join('<br/>')}`,
-        filePath: editorFilePath,
-        range: [
-          [lineNumber, 0],
-          [lineNumber, 0]
-        ] // TODO search for invalid import
-      }
-    ];
+    const range = new Range([lineNumber, 0], [lineNumber, 0]);
+    const problem = {
+      type: 'error',
+      html:
+        formatting.formatProblemDetails(stderr) +
+        '<br>', // There's an extra line break here so that the line and column info from linter will be at the next line.
+      filePath: editorFilePath,
+      regionRange: range,
+      range: range,
+      problem: stderr
+    };
+    this.problems[editorFilePath] = [problem];
+    return [problem];
   },
   computeQuickFixesForEditor(editor) {
     const editorFilePath = editor.getPath();
@@ -865,7 +938,7 @@ export default {
       const quickFixes =
         problems.map(({problem, range}) => {
           return {
-            fixes: getFixesForProblem(problem, editor.getTextInBufferRange(range)),
+            fixes: quickFixing.getFixesForProblem(problem, editor.getTextInBufferRange(range), editor),
             range: range
           };
         })
@@ -881,13 +954,13 @@ export default {
   },
   getFixesAtCursorPosition() {
     const editor = atom.workspace.getActiveTextEditor();
-    if (!isElmEditor(editor)) {
+    if (!helper.isElmEditor(editor)) {
       return null;
     }
     const position = editor.getLastCursor().getBufferPosition();
     // Look for fixes for the issue at cursor position.
     let fixesForPosition = null;
-    const quickFixes = this.quickFixes[editor.getPath()] || this.computeQuickFixesForEditor(editor);
+    const quickFixes = this.allQuickFixes(editor);
     if (quickFixes) {
       _.find(quickFixes, ({range, fixes}) => {
         if (range.containsPoint(position)) {
@@ -900,33 +973,76 @@ export default {
     return fixesForPosition;
   },
   updateLinterUI() {
+    this.hideQuickFixesIndicators();
     if (this.updateLinterUIDebouncer) {
       clearTimeout(this.updateLinterUIDebouncer);
       this.updateLinterUIDebouncer = null;
     }
     this.updateLinterUIDebouncer =
       setTimeout(() => {
-        this.updateQuickFixesIndicatorDisplay();
-        this.scrollProblemAtCursorIntoView();
+        this.updateQuickFixesIndicators();
+        this.maybeScrollProblemAtCursorIntoView();
     }, 300);
   },
-  updateQuickFixesIndicatorDisplay() {
+  updateQuickFixesIndicators() {
+    const fixesForCursorPosition = this.getFixesAtCursorPosition();
+    const numFixes = fixesForCursorPosition ? fixesForCursorPosition.fixes.length : 0;
+    // Update quick fixes indicator in status bar.
     if (this.quickFixesIndicator) {
       const fixesForCursorPosition = this.getFixesAtCursorPosition();
-      this.quickFixesIndicator.item.innerHTML = fixesForCursorPosition ? 'Quick Fixes: ' + fixesForCursorPosition.fixes.length : '';
+      this.quickFixesIndicator.item.innerHTML = numFixes > 0 ? '<span class="linter-elm-make-quick-fixes-status">Quick Fixes: ' + numFixes + '</span>': '';
+    }
+    // Update quick fixes tooltip.
+    const linterTooltip = helper.getLinterTooltip();
+    if (linterTooltip) {
+      if (numFixes > 0) {
+        this.quickFixesTooltip = atom.tooltips.add(linterTooltip, {
+          title: ' ' + parseInt(numFixes, 10),
+          trigger: 'manual',
+          placement: 'auto left',
+          class: 'linter-elm-make-quick-fixes-tooltip',
+          delay: {show: 0, hide: 0}
+        });
+      }
     }
   },
-  scrollProblemAtCursorIntoView() {
+  maybeShowInferredTypeAnnotations(editor) {
+    destroyEditorMarkers(this.typeAnnotationMarkers, editor.id);
+    this.typeAnnotationMarkers[editor.id] = [];
+    if (atom.config.get('linter-elm-make.showInferredTypeAnnotations')) {
+      this.quickFixesWhere(editor, fix => fix.type === 'Add type annotation')
+        .forEach(({range, fixes}) => {
+          let element = document.createElement('div');
+          element.classList.add('linter-elm-make-inferred-type-annotation');
+          element.textContent = fixes[0].text;
+          let marker = editor.markBufferPosition(range.start);
+          marker.setProperties({fixType: 'Add type annotation', fixRange: range});
+          editor.decorateMarker(marker, {type: 'block', position: 'before', item: element});
+          this.subscriptions.add(marker.onDidDestroy(() => {
+            let markerIndex = this.typeAnnotationMarkers[editor.id].indexOf(marker);
+            if(markerIndex != -1) {
+              this.typeAnnotationMarkers[editor.id].splice(markerIndex, 1);
+            }
+          }));
+          this.typeAnnotationMarkers[editor.id].push(marker);
+        });
+    }
+  },
+  quickFixesWhere(editor, fixPredicate) {
+    return (this.allQuickFixes(editor) || [])
+      .map(quickFix => Object.assign({}, quickFix, { fixes: quickFix.fixes.filter(fixPredicate) }))
+      .filter(quickFix => quickFix.fixes.length > 0);
+  },
+  maybeScrollProblemAtCursorIntoView() {
     if (atom.config.get('linter-elm-make.autoscrollIssueIntoView')) {
-      let linterPanel = document.getElementsByTagName('linter-panel');
-      if (linterPanel && linterPanel.length > 0) {
-        linterPanel = linterPanel[0];
+      const linterPanel = helper.getLinterPanel();
+      if (linterPanel) {
         if (this.prevProblemAnchor) {
           this.prevProblemAnchor.parentNode.parentNode.parentNode.className = 'linter-elm-make-issue';
         }
         const problem = this.getProblemAtCursorPosition();
         if (problem) {
-          let problemAnchor = linterPanel.getElementsByClassName(getAnchorForMessage(problem.filePath, problem.range));
+          let problemAnchor = linterPanel.getElementsByClassName(getAnchorForMessage(problem.filePath, problem.regionRange, problem.subregionRange));
           if (problemAnchor && problemAnchor.length > 0) {
             problemAnchor = problemAnchor[0];
             problemAnchor.scrollIntoView();
@@ -941,60 +1057,46 @@ export default {
   },
   getProblemAtCursorPosition() {
     const editor = atom.workspace.getActiveTextEditor();
-    if (!isElmEditor(editor)) {
+    if (!helper.isElmEditor(editor)) {
       return null;
     }
     const position = editor.getLastCursor().getBufferPosition();
     // Look for problem at cursor position.
-    let problem = null;
     const problems = this.problems[editor.getPath()];
     if (problems) {
-      _.find(problems, ({range, filePath}) => {
-        if (range.containsPoint(position)) {
-          problem = {range, filePath};
-          return true;
-        }
-        return false;
-      });
+      const problemsAtPosition =
+        problems.filter(({range}) => {
+          return range.containsPoint(position);
+        });
+      if (problemsAtPosition.length > 0) {
+        // Get the most specific range.
+        return _.min(problemsAtPosition,
+          ({range}) => {
+            return range.end.row - range.start.row;
+          });
+      }
     }
-    return problem;
+    return null;
   }
 };
 
 function createProgressIndicator() {
-  const result = document.createElement("div");
-  result.classList.add("inline-block");
-  result.classList.add("icon-ellipsis");
-  result.innerHTML = "Linting...";
+  const result = document.createElement('div');
+  result.classList.add('inline-block');
+  result.classList.add('icon-ellipsis');
+  result.textContent = 'Linting...';
   return result;
 }
 
 function createQuickFixesIndicator() {
-  const result = document.createElement("div");
-  result.classList.add("inline-block");
+  const result = document.createElement('div');
+  result.classList.add('inline-block');
   return result;
-}
-
-function lookupElmPackage(directory) {
-  if (fs.existsSync(path.join(directory, 'elm-package.json'))) {
-    return directory;
-  } else {
-    const parentDirectory = path.join(directory, "..");
-    if (parentDirectory === directory) {
-      atom.notifications.addError('No `elm-package.json` beneath or above the edited file', {
-        detail: 'You can generate an `elm-package.json` file by running `elm-package install` from the command line.',
-        dismissable: true
-      });
-      return null;
-    } else {
-      return lookupElmPackage(parentDirectory);
-    }
-  }
 }
 
 function getProjectBuildArtifactsDirectory(filePath) {
   if (filePath) {
-    const projectDirectory = lookupElmPackage(path.dirname(filePath));
+    const projectDirectory = helper.lookupElmPackage(path.dirname(filePath));
     if (projectDirectory === null) {
       return null;
     }
@@ -1005,7 +1107,7 @@ function getProjectBuildArtifactsDirectory(filePath) {
       env: process.env
     })
     .then(data => {
-      let elmPlatformVersion = data.split('\n')[0].match(/\(Elm Platform (.*)\)/)[1];
+      let elmPlatformVersion = data.split('\n')[0].match(/\(Elm Platform (.+)\)/)[1];
       let json = fs.readJsonSync(path.join(projectDirectory, 'elm-package.json'), {throws: false});
       if (json) {
         if (json.repository && json.version) {
@@ -1068,23 +1170,16 @@ function isASourceDirectoryOutsideProjectDirectory(projectDirectory) {
   return false;
 }
 
-function toggleConfig(key) {
-  const oldValue = atom.config.get(key);
-  const newValue = !oldValue;
-  atom.config.set(key, newValue);
-  return newValue;
-}
-
 function forceLintActiveElmEditor() {
   const editor = atom.workspace.getActiveTextEditor();
-  if (isElmEditor(editor)) {
+  if (helper.isElmEditor(editor)) {
     atom.commands.dispatch(atom.views.getView(editor), 'linter:lint');
   }
 }
 
 function refreshLintResultsOfActiveElmEditor() {
   const editor = atom.workspace.getActiveTextEditor();
-  if (isElmEditor(editor)) {
+  if (helper.isElmEditor(editor)) {
     // Toggle linter off then on again to refresh the lint results.
     [1, 2].forEach(() => {
       atom.commands.dispatch(atom.views.getView(editor), 'linter:toggle');
@@ -1092,231 +1187,29 @@ function refreshLintResultsOfActiveElmEditor() {
   }
 }
 
-function isElmEditor(editor) {
-  return editor && editor.getPath && editor.getPath() && path.extname(editor.getPath()) === '.elm';
+function getAnchorForMessage(filePath, regionRange, subregionRange) {
+  return 'linter-elm-make://' + filePath + ':' + regionRange.start.row + ',' + regionRange.start.column +
+    (subregionRange ? (':' + subregionRange.start.row + ',' + subregionRange.start.column) : '');
 }
 
-// TODO: Tests.
-function getFixesForProblem(problem, rangeText) {
-  let matches = null;
-  switch (problem.tag) {
-    case 'NAMING ERROR':
-      matches = problem.details.match(/^No module called `(.*)` has been imported./);
-      if (matches && matches.length > 1) {
-        const importFix = [{
-          type: 'Add import',
-          text: 'import ' + matches[1]
-        }];
-        const suggestionFixes = (problem.suggestions || []).map((suggestion) => {
-          return {
-            type: 'Replace with',
-            text: rangeText.replace(matches[1], suggestion)
-          };
-        });
-        return importFix.concat(suggestionFixes);
-      }
-      matches = problem.details.match(/^The qualifier `(.*)` is not in scope\./);
-      if (matches && matches.length > 1) {
-        const suggestionFixes = (problem.suggestions || []).map((suggestion) => {
-          return {
-            type: 'Replace with',
-            text: rangeText.replace(matches[1], suggestion)
-          };
-        });
-        const importFix = [{
-          type: 'Add import',
-          text: 'import ' + matches[1]
-        }];
-        return suggestionFixes.concat(importFix);
-      }
-      matches = problem.details.match(/^`(.*)` does not expose (.*)\./);
-      if (matches && matches.length > 1 && problem.suggestions && problem.suggestions.length > 0) {
-        return problem.suggestions.map((suggestion) => {
-          let rangeTextSegments = rangeText.split('.');
-          rangeTextSegments.pop();
-          return {
-            type: 'Replace with',
-            text: rangeTextSegments.join('.') + '.' + suggestion
-          };
-        });
-      }
-      matches = problem.overview.match(/^Cannot find (?:variable|type|pattern) `(.*)`/);
-      if (matches && matches.length > 1 && problem.suggestions && problem.suggestions.length > 0) {
-        return problem.suggestions.map((suggestion) => {
-          return {
-            type: 'Replace with',
-            text: rangeText.replace(matches[1], suggestion)
-          };
-        });
-      }
-      matches = problem.overview.match(/^Cannot find type `(.*)`/);
-      if (matches && matches.length > 1 && problem.suggestions && problem.suggestions.length > 0) {
-        return problem.suggestions.map((suggestion) => {
-          return {
-            type: 'Replace with',
-            text: rangeText.replace(matches[1], suggestion)
-          };
-        });
-      }
-      if (problem.suggestions && problem.suggestions.length > 0) {
-        return problem.suggestions.map((suggestion) => {
-          return {
-            type: 'Replace with',
-            text: suggestion
-          };
-        });
-      }
-      return null;
-    case 'missing type annotation':
-      matches = problem.details.match(/I inferred the type annotation so you can copy it into your code:\n\n((.|\n)*)$/);
-      if (matches && matches.length > 1) {
-        return [{
-          type: 'Add type annotation',
-          text: matches[1]
-        }];
-      }
-      return null;
-    case 'TYPE MISMATCH':
-      matches = problem.details.match(/But I am inferring that the definition has this type:\n\n    (.*)\n\nHint: A type annotation is too generic\. You can probably just switch to the type\nI inferred\. These issues can be subtle though, so read more about it\.\n<https:\/\/github\.com\/elm-lang\/elm-compiler\/blob\/\d+\.\d+\.\d+\/hints\/type-annotations\.md>$/);
-      if (matches && matches.length > 1) {
-        return [{
-          type: 'Replace with',
-          text: matches[1]
-        }];
-      }
-      matches = problem.details.match(/But I am inferring that the definition has this type:\n\n    (.*)$/);
-      if (matches && matches.length > 1) {
-        return [{
-          type: 'Replace with',
-          text: matches[1]
-        }];
-      }
-      if (problem.details === "(+) is expecting the left argument to be a:\n\n    number\n\nBut the left argument is:\n\n    String\n\nHint: To append strings in Elm, you need to use the (++) operator, not (+).\n<http://package.elm-lang.org/packages/elm-lang/core/latest/Basics#++>") {
-        return [{
-          type: 'Replace with',
-          text: rangeText.replace(/\+/, '++')
-        }];
-      }
-      return null;
-    case 'ALIAS PROBLEM':
-      matches = problem.details.match(/Try this instead:\n\n((.|\n)*)\n\nThis is kind of a subtle distinction\. I suggested the naive fix, but you can\noften do something a bit nicer\. So I would recommend reading more at:\n<https:\/\/github\.com\/elm-lang\/elm-compiler\/blob\/\d+\.\d+\.\d+\/hints\/recursive-alias\.md>$/);
-      if (matches && matches.length > 1) {
-        return [{
-          type: 'Replace with',
-          text: matches[1].split('\n').map((line) => {
-            return line.slice(4);
-          }).join('\n')
-        }];
-      }
-      return null;
-    case 'unused import':
-      // matches = problem.overview.match(/^Module `(.*)` is unused.$/);
-      return [{
-        type: 'Remove unused import',
-        // text: matches[1]
-        text: rangeText
-      }];
-    case 'SYNTAX PROBLEM':
-      if (problem.overview === 'The = operator is reserved for defining variables. Maybe you want == instead? Or\nmaybe you are defining a variable, but there is whitespace before it?') {
-        return [{
-          type: 'Replace with',
-          text: '==',
-          range: new Range(
-            [problem.region.start.line - 1, problem.region.start.column - 1],
-            [problem.region.end.line - 1, problem.region.end.column])
-        }];
-      }
-      if (problem.overview === 'Arrows are reserved for cases and anonymous functions. Maybe you want > or >=\ninstead?') {
-        return [{
-          type: 'Replace with',
-          text: '>',
-          range: new Range(
-            [problem.region.start.line - 1, problem.region.start.column - 1],
-            [problem.region.end.line - 1, problem.region.end.column + 1])
-        }, {
-          type: 'Replace with',
-          text: '>=',
-          range: new Range(
-            [problem.region.start.line - 1, problem.region.start.column - 1],
-            [problem.region.end.line - 1, problem.region.end.column + 1])
-        }];
-      }
-      if (problem.overview === 'Vertical bars are reserved for use in union type declarations. Maybe you want ||\ninstead?') {
-        return [{
-          type: 'Replace with',
-          text: '||',
-          range: new Range(
-            [problem.region.start.line - 1, problem.region.start.column - 1],
-            [problem.region.end.line - 1, problem.region.end.column])
-        }];
-      }
-      if (problem.overview === 'A single colon is for type annotations. Maybe you want :: instead? Or maybe you\nare defining a type annotation, but there is whitespace before it?') {
-        return [{
-          type: 'Replace with',
-          text: '::',
-          range: new Range(
-            [problem.region.start.line - 1, problem.region.start.column - 1],
-            [problem.region.end.line - 1, problem.region.end.column])
-        }];
-      }
-      return null;
-    default:
-      return null;
+function showNoQuickFixesFound() {
+  const detail = atom.config.get('linter-elm-make.lintOnTheFly') ? '' : 'If there was an edit after the last lint, you might need to lint again.';
+  atom.notifications.addError('No quick fixes found', {
+    detail: detail
+  });
+}
+
+function destroyEditorMarkers(editorMarkers, editorId) {
+  let markers = editorMarkers[editorId];
+  if (markers) {
+    markers.forEach((marker) => {
+      marker.destroy();
+    });
   }
 }
 
-// TODO: Tests.
-function fixProblem(editor, range, fix) {
-  switch (fix.type) {
-    case 'Replace with':
-      editor.setTextInBufferRange(fix.range ? fix.range : range, fix.text);
-      break;
-    case 'Add type annotation':
-      // Insert type annotation above the line.
-      const leadingSpaces = new Array(range.start.column).join(' ');
-      editor.setTextInBufferRange([range.start, range.start], fix.text + '\n' + leadingSpaces);
-      break;
-    case 'Remove unused import':
-      editor.buffer.deleteRow(range.start.row);
-      break;
-    case 'Add import':
-      // Insert below the last import, or module declaration (unless already imported (as when using `Quick Fix All`)).
-      let alreadyImported = false;
-      const allImportsRegex = /((?:^|\n)import\s([\w\.]+)(?:\s+as\s+(\w+))?(?:\s+exposing\s*\(((?:\s*(?:\w+|\(.+\))\s*,)*)\s*((?:\.\.|\w+|\(.+\)))\s*\))?)+/m;
-      editor.scanInBufferRange(allImportsRegex, [[0, 0], editor.getEofBufferPosition()], ({matchText, range, stop}) => {
-        if (!(new RegExp('^' + fix.text, 'm').test(matchText))) {
-          const insertPoint = range.end.traverse([1, 0]);
-          editor.setTextInBufferRange([insertPoint, insertPoint], fix.text + '\n');
-        }
-        alreadyImported = true;
-        stop();
-      });
-      if (!alreadyImported) {
-        const moduleRegex = /(?:^|\n)((effect|port)\s+)?module\s+([\w\.]+)(?:\s+exposing\s*\(((?:\s*(?:\w+|\(.+\))\s*,)*)\s*((?:\.\.|\w+|\(.+\)))\s*\))?(\s*^{-\|([\s\S]*?)-}\s*|)/m;
-        editor.scanInBufferRange(moduleRegex, [[0, 0], editor.getEofBufferPosition()], ({range, stop}) => {
-          const insertPoint = range.end.traverse([1, 0]);
-          editor.setTextInBufferRange([insertPoint, insertPoint], '\n' + fix.text + '\n');
-          alreadyImported = true;
-          stop();
-        });
-      }
-      if (!alreadyImported) {
-        editor.setTextInBufferRange([[0,0], [0,0]], fix.text + '\n');
-      }
-      break;
-  }
-}
-
-function getAnchorForMessage(filePath, range) {
-  return 'linter-elm-make://' + filePath + ':' + range.start.row + ',' + range.start.column;
-}
-
-function devLog(msg, color) {
-  if (atom.config.get('linter-elm-make.logDebugMessages')) {
-    if (color) {
-      console.log('[linter-elm-make] %c' + msg, 'color:' + color + ';');
-    } else {
-      console.log('[linter-elm-make] ' + msg);
-    }
-  }
+function destroyAllMarkers(allMarkers) {
+  Object.keys(allMarkers).forEach((editorId) => {
+    destroyEditorMarkers(allMarkers, editorId);
+  });
 }

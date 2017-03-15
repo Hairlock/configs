@@ -1,7 +1,7 @@
 'use babel';
 
 import {Range, Point} from 'atom';
-const _ = require('underscore-plus');
+import _ from 'underscore-plus';
 import fs from 'fs-extra';
 import helper from './helper';
 
@@ -22,7 +22,7 @@ export default {
           const editor = helper.getEditorForSourcePath(sourcePath);
           const text = editor ? editor.getText() : fs.readFileSync(sourcePath).toString();
           text.split('\n').forEach((line, row) => {
-            const lineUsages = parseLine(sourcePath, row, line, rawToken, tokenToHighlight, tokenLastPart, isCursorAtLastPartOfToken, willUseFullToken, isModule, isImportAlias, names);
+            const lineUsages = parseLine(sourcePath, row, line, tokenToHighlight, tokenLastPart, isCursorAtLastPartOfToken, willUseFullToken, isModule, isImportAlias, names);
             allLineUsages.push(lineUsages);
           });
         }
@@ -40,7 +40,7 @@ export default {
 
 };
 
-function parseLine(sourcePath, row, line, token, tokenToHighlight, tokenLastPart, isCursorAtLastPartOfToken, willUseFullToken, isModule, isImportAlias, names) {
+function parseLine(sourcePath, row, line, tokenToHighlight, tokenLastPart, isCursorAtLastPartOfToken, willUseFullToken, isModule, isImportAlias, names) {
   const boundaryRegex = '\\s|,|\\(|\\)|\\[|\\]|\\{|\\}';
   const localNamesRegex = names.map((name) => {
     return _.escapeRegExp(name);

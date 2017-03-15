@@ -1,3 +1,57 @@
+## 0.22.5
+* Make `Set Main Paths` work again (#130).  Thanks to @raffomania for reporting!
+* Styling fixes.
+
+## 0.22.4
+* Fix issue where the text of the quick fixes tooltip is not visible when using some UI themes.  Thanks to @AntouanK for reporting!
+
+## 0.22.3
+* Better lint task queuing.
+
+## 0.22.2
+* Remove "Elm" label in linter panel and linter tooltip to minimize space requirement.
+* Made linter tooltip a bit translucent to see a semblance of the code underneath.
+
+## 0.22.1
+* Change quick fix icon to the standard light bulb.
+* Move quick fix icon to the left of linter tooltip.
+
+## 0.22.0
+* Add `Add missing patterns` quick fix.
+* Add `Fix module name` quick fix.
+* Show number of quick fixes with the linter tooltip.
+* More styling.
+
+## 0.21.1
+* Fix `Auto Scroll Issue Into View` regression bug.
+* Escape links in messages.
+* More styling.
+
+## 0.21.0
+* Change inline tooltip style to match linter panel.
+* Fix bug where inferred type annotations are not properly removed.
+* More styling.
+
+## 0.20.0
+* Add styling and diffs to linter panel and inline tooltips.
+* Highlight problem subregion if available.
+* Make `Auto Scroll Issue Into View` choose the most specific problem range containing cursor position, not the first one.
+
+## 0.19.0
+* Add `Show Inferred Type Annotations` option.
+
+## 0.18.5
+* Fix wrong file extension for intentions screen capture.
+
+## 0.18.4
+* Allow integration with the [Intentions](https://atom.io/packages/intentions) package.
+
+## 0.18.3
+* Put a try/catch when checking if a file exists.
+
+## 0.18.2
+* Add quick fix for "The record fields do not match up".
+
 ## 0.18.1
 * Fix errors when status-bar isn't available.  Thanks, @ream88!
 

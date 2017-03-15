@@ -5,7 +5,8 @@
   .symbol-kind-module {
     color: @text-color-subtle;
   }
-  .symbol-kind-default {
+  .symbol-kind-default,
+  .symbol-kind-variable {
     color: @text-color-highlight;
   }
   .symbol-kind-type,
@@ -43,6 +44,11 @@
   .version-range {
     color: @text-color-subtle;
     margin-left: @component-padding;
+  }
+}
+.elmjutsu-replace-type-with-alias {
+  .alias {
+    color: @text-color-highlight;
   }
 }
 .elmjutsu-usages {
@@ -110,14 +116,19 @@
     padding: @component-padding;
   }
 }
-atom-text-editor,
-atom-text-editor::shadow {
+atom-text-editor {
   .elmjutsu-symbol-marker .region {
     border: 1px solid @ui-site-color-5;
     border-radius: @component-border-radius;
   }
   .elmjutsu-eval .region {
-    background-color: fadeout(@background-color-warning, 75%);
+    background-color: fadeout(@background-color-warning, 80%);
+  }
+  .elmjutsu-eval-result .region {
+    background-color: fadeout(@background-color-success, 80%);
+  }
+  .elmjutsu-eval-result-error .region {
+    background-color: fadeout(@background-color-error, 80%);
   }
   .elmjutsu-pipe-selection-start .region {
     box-sizing: border-box;
@@ -128,8 +139,7 @@ atom-text-editor::shadow {
     border-right: 1px solid fadeout(@text-color-error, 25%);
   }
 }
-atom-text-editor.elmjutsu-pipe-selections,
-atom-text-editor.elmjutsu-pipe-selections::shadow {
+atom-text-editor.elmjutsu-pipe-selections {
   // Imitate mini editor.
   margin: 4px 2px;
   padding: 4px 2px;
@@ -159,6 +169,9 @@ atom-text-editor.elmjutsu-pipe-selections.processing {
     font-size: @font-size;
     font-family: @font-family;
   }
+  .note {
+    white-space: pre-line;
+  }
   .hint {
     padding: 2px;
     border: 1px solid rgba(255, 255, 255, 0.05);
@@ -172,6 +185,40 @@ atom-text-editor.elmjutsu-pipe-selections.processing {
       color: @text-color-subtle;
     }
   }
+}
+.elmjutsu-hint-tooltip.tooltip {
+  margin: 0 !important;
+  .tooltip-inner {
+    padding: 4px !important;
+    background-color: fadeout(@tool-panel-background-color, 15%) !important;
+    border: 1px solid fadeout(@text-color-subtle, 30%) !important;
+    color: @text-color !important;
+    font-size: 90%;
+  }
+  &.top {
+    .tooltip-arrow {
+      border-top-color: fadeout(@text-color-subtle, 30%) !important;
+    }
+  }
+  &.bottom {
+    .tooltip-arrow {
+      border-bottom-color: fadeout(@text-color-subtle, 30%) !important;
+    }
+  }
+  &.left {
+    .tooltip-arrow {
+      border-left-color: fadeout(@text-color-subtle, 30%) !important;
+    }
+  }
+  &.right {
+    .tooltip-arrow {
+      border-right-color: fadeout(@text-color-subtle, 30%) !important;
+    }
+  }
+}
+.elmjutsu-inferred-range .region {
+  border: 1px dotted @ui-site-color-4; // purple
+  border-radius: @component-border-radius;
 }
 atom-text-editor:not([mini])[data-grammar="source elm"] autocomplete-suggestion-list {
   // font-size: @font-size;

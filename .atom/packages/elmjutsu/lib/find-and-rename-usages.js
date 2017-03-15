@@ -3,7 +3,7 @@
 import {CompositeDisposable} from 'atom';
 import path from 'path';
 import fs from 'fs-extra';
-const _ = require('underscore-plus');
+import _ from 'underscore-plus';
 import FindAndRenameUsagesView from './find-and-rename-usages-view';
 import helper from './helper';
 import indexing from './indexing';
@@ -17,11 +17,11 @@ export default class FindUsages {
     this.subscriptions = new CompositeDisposable();
     this.subscriptions.add(atom.commands.add('atom-text-editor.elmjutsu-rename-symbol', {
       'elmjutsu:cancel-rename-symbol':  this.hideCommand.bind(this), // escape
-      'elmjutsu:confirm-rename-symbol': this.doRenameSymbol.bind(this) // enter
+      'elmjutsu:confirm-rename-symbol': this.confirmRenameSymbolCommand.bind(this) // enter
     }));
     this.view = new FindAndRenameUsagesView();
     this.subscriptions.add(atom.workspace.addOpener((uriToOpen) => {
-      if (uriToOpen === getURI()) {
+      if (uriToOpen === helper.usagesViewURI()) {
         return this.view;
       }
     }));
@@ -41,7 +41,7 @@ export default class FindUsages {
 
   show(projectDirectory, tokenToHighlight, selectedIndex, usages, willShowRenamePanel) {
     const prevActivePane = atom.workspace.getActivePane();
-    atom.workspace.open(getURI(), {searchAllPanes: true, split: 'right'})
+    atom.workspace.open(helper.usagesViewURI(), {searchAllPanes: true, split: 'right'})
       .then((view) => {
         if (isFindAndRenameUsagesView(view)) {
           prevActivePane.activate();
@@ -59,9 +59,9 @@ export default class FindUsages {
   }
 
   hideCommand() {
-    const pane = atom.workspace.paneForURI(getURI());
+    const pane = atom.workspace.paneForURI(helper.usagesViewURI());
     if (pane) {
-      pane.destroyItem(pane.itemForURI(getURI()));
+      pane.destroyItem(pane.itemForURI(helper.usagesViewURI()));
     }
   }
 
@@ -124,7 +124,7 @@ export default class FindUsages {
     }
   }
 
-  doRenameSymbol() {
+  confirmRenameSymbolCommand() {
     this.view.getCheckedUsages((usages) => {
       const newName = this.view.getRenameText();
       const {oldName, projectDirectory} = this.renameInfo;
@@ -210,11 +210,6 @@ export default class FindUsages {
     }
   }
 
-}
-
-// Must the same as in `find-and-rename-usages-view.js`.
-function getURI() {
-  return 'elmjutsu-usages-view://';
 }
 
 function isFindAndRenameUsagesView(view) {

@@ -1,6 +1,6 @@
 'use babel';
 
-const CompositeDisposable = require('atom').CompositeDisposable;
+import {CompositeDisposable} from 'atom';
 import helper from './helper';
 import SidekickView from './sidekick-view';
 
@@ -8,7 +8,7 @@ export default class Sidekick {
 
   constructor(indexer) {
     this.indexer = indexer;
-    this.view = new SidekickView(this.indexer);
+    this.view = new SidekickView(this.indexer, getConfig());
     this.subscriptions = new CompositeDisposable();
     this.subscriptions.add(atom.config.observe('elmjutsu.showSidekick', showSidekick => {
       if (showSidekick) {
@@ -29,7 +29,7 @@ export default class Sidekick {
       }
     }));
     this.subscriptions.add(atom.workspace.observeActivePaneItem((item) => {
-      if (item && helper.isElmEditor(item)) {
+      if (item && (helper.isElmEditor(item) || (item.getURI && item.getURI() === helper.usagesViewURI()))) {
         if (!this.panel && atom.config.get('elmjutsu.showSidekick')) {
           this.show(atom.config.get('elmjutsu.sidekickPosition'), atom.config.get('elmjutsu.sidekickSize'));
         }
@@ -37,6 +37,19 @@ export default class Sidekick {
         this.hide();
       }
     }));
+    [
+      'elmjutsu.showTypesInSidekick',
+      'elmjutsu.showTypeCasesInSidekick',
+      'elmjutsu.showDocCommentsInSidekick',
+      'elmjutsu.showAssociativitiesInSidekick',
+      'elmjutsu.showPrecedencesInSidekick',
+      'elmjutsu.showAliasesOfTypesInSidekick',
+      'elmjutsu.showSourcePathsInSidekick',
+    ].forEach((configKey) => {
+        this.subscriptions.add(atom.config.observe(configKey, () => {
+          this.view.updateConfig(getConfig());
+        }));
+      });
   }
 
   destroy() {
@@ -96,4 +109,16 @@ export default class Sidekick {
     }
   }
 
+}
+
+function getConfig() {
+  return {
+    showTypes: atom.config.get('elmjutsu.showTypesInSidekick') || false,
+    showTypeCases: atom.config.get('elmjutsu.showTypeCasesInSidekick') || false,
+    showDocComments: atom.config.get('elmjutsu.showDocCommentsInSidekick') || false,
+    showAssociativities: atom.config.get('elmjutsu.showAssociativitiesInSidekick') || false,
+    showPrecedences: atom.config.get('elmjutsu.showPrecedencesInSidekick') || false,
+    showAliasesOfType: atom.config.get('elmjutsu.showAliasesOfTypesInSidekick') || false,
+    showSourcePaths: atom.config.get('elmjutsu.showSourcePathsInSidekick') || false,
+  };
 }

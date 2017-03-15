@@ -1,8 +1,0 @@
-{
-  "name": "alien-science",
-  "version": "0.0.6",
-  "title": "Alien Science",
-  "author": "Darkrising",
-  "dependencies": ["base >= 0.11.0"],
-  "description": "Adds a recipe to allow the crafting of alien science packs"
-}

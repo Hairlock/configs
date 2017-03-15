@@ -1,12 +1,12 @@
 'use babel';
 
 import childProcess from 'child_process';
-const _ = require('underscore-plus');
+import _ from 'underscore-plus';
 import indexing from './indexing';
 import helper from './helper';
 import PipeSelections from './pipe-selections';
+import os from 'os';
 
-// TODO: Experiment with having just one `elm-repl` process per project directory (needs queuing).
 export default class Eval {
 
   constructor(indexer) {
@@ -21,13 +21,21 @@ export default class Eval {
   evalCommand() {
     const editor = atom.workspace.getActiveTextEditor();
     const editorText = editor.getText();
-    const selectedText = editor.getSelectedText();
     if (helper.isElmEditor(editor)) {
       const projectDirectory = helper.getProjectDirectory(editor.getPath());
       // Ignore `elm-repl` banner and `editorText`.
       const numOutputsToIgnore = 2;
-      const selection = editor.getLastSelection();
+      let selection = editor.getLastSelection();
+      // Select the whole line if nothing is selected.
+      if (selection.isEmpty()) {
+        editor.transact(() => {
+          const row = selection.getBufferRange().start.row;
+          editor.setSelectedBufferRange([[row, 0], [row, editor.lineTextForBufferRow(row).length]]);
+          selection = editor.getLastSelection();
+        });
+      }
       const range = selection.getBufferRange();
+      const selectedText = editor.getTextInBufferRange(range);
       const marker = helper.markRange(editor, range, 'elmjutsu-eval');
       const proc = this.executeInRepl(projectDirectory, numOutputsToIgnore, (errString, outString) => {
         marker.destroy();
@@ -35,10 +43,18 @@ export default class Eval {
         const result = errString.length > 0 ? errString : outString;
         editor.transact(() => {
           selection.setBufferRange([range.end, range.end]);
-          selection.insertText(' {- ' + result + ' -}', {select: true});
+          // const type = result.replace(value + ' : ', '');
+          // const value = helper.removeTypeAnnotation(result);
+          const leadingSpaces = new Array(range.start.column + 1).join(' ');
+          selection.insertText('\n' + leadingSpaces);
+          let resultRange = selection.insertText(result);
+          selection.insertText('\n' + leadingSpaces);
+          let marker = editor.markBufferRange(resultRange, {invalidate: 'inside'});
+          const isError = result.startsWith('--');
+          editor.decorateMarker(marker, {type: 'highlight', class: isError ? 'elmjutsu-eval-result-error' : 'elmjutsu-eval-result'});
         });
       });
-      // Get import expressions.
+      // Get import statements.
       const imports = getImports(editorText).join('\n');
       // Import module name, if available.
       let maybeImportModule = '';
@@ -75,7 +91,6 @@ export default class Eval {
           ignoredOutputs = ignoredOutputs + 1;
         } else {
           outString += cleanedData;
-          proc.stdin.end();
           proc.kill();
         }
       } else {
@@ -97,7 +112,7 @@ export default class Eval {
 }
 
 function sendToRepl(proc, code) {
-  proc.stdin.write(formatCode(code) + '\n');
+  proc.stdin.write(formatCode(code) + os.EOL);
 }
 
 function formatCode(code) {
