@@ -1,4 +1,4 @@
-" Highlight the current linesyntax enable
+syntax enable
 filetype plugin indent on
 
 set nocompatible
@@ -57,12 +57,6 @@ set nohlsearch
 set backspace=eol,start,indent
 set whichwrap+=<,>,h,l
 
-" color darkblue
-" hi Keyword ctermfg=darkcyan
-" hi Constant ctermfg=5*
-" hi Comment ctermfg=2*
-" hi Normal ctermbg=none
-" hi LineNr ctermfg=darkgrey
 set mouse=a
 
 " Ctrl+arrow to resize pane
@@ -91,7 +85,6 @@ vmap <down>  ]egv
 vmap <left>  <gv
 vmap <right> >gv
 
-" execute pathogen#infect()
 " Load Plugins
 call plug#begin('~/.config/nvim/plugged')
 
@@ -139,7 +132,7 @@ let g:ale_linters_explicit = 1 " Only use specified linters
 
 let g:ale_lint_on_text_changed = 0
 let g:ale_lint_on_enter = 0
-let g:ale_lint_on_save = 1 
+let g:ale_lint_on_save = 1
 
 " https://github.com/w0rp/ale/blob/master/autoload/ale/fix/registry.vim
 let g:ale_fixers = {
@@ -161,7 +154,7 @@ let g:ale_fix_on_save = 1
 
 let g:ale_sign_error = '✘'
 let g:ale_sign_warning = '⚠'
-let g:ale_set_highlights = 0 
+let g:ale_set_highlights = 0
 
 " NerdTree Config
 map  <c-n>     :NERDTreeToggle<cr>
